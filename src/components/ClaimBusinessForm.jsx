@@ -98,17 +98,6 @@ const ClaimBusinessForm = () => {
         toast.error("Please fill in all required fields");
         return;
       }
-    } else if (currentStep === 3) {
-      if (
-        !formData.license_number ||
-        !formData.issuing_authority ||
-        !formData.license_type ||
-        !formData.expiration_date ||
-        !formData.jurisdiction
-      ) {
-        toast.error("Please fill in all required fields");
-        return;
-      }
     }
 
     if (currentStep < totalSteps) {
@@ -131,12 +120,7 @@ const ClaimBusinessForm = () => {
       !formData.full_name ||
       !formData.email_address ||
       !formData.phone_number ||
-      !formData.role_or_position ||
-      !formData.license_number ||
-      !formData.issuing_authority ||
-      !formData.license_type ||
-      !formData.expiration_date ||
-      !formData.jurisdiction
+      !formData.role_or_position
     ) {
       toast.error("Please fill in all required fields");
       return;
@@ -558,7 +542,7 @@ const ClaimBusinessForm = () => {
                 color: "#10b981",
                 marginBottom: "32px",
               }}>
-              License Details
+                License Details 
             </h2>
 
             <div style={{ marginBottom: "24px" }}>
@@ -570,7 +554,7 @@ const ClaimBusinessForm = () => {
                   fontWeight: "600",
                   fontSize: "14px",
                 }}>
-                License Number *
+                License Number 
               </label>
               <input
                 type="text"
@@ -594,7 +578,7 @@ const ClaimBusinessForm = () => {
                   fontWeight: "600",
                   fontSize: "14px",
                 }}>
-                Issuing Authority (e.g., California DCC, NY OCM) *
+                Issuing Authority (e.g., California DCC, NY OCM) 
               </label>
               <input
                 type="text"
@@ -618,7 +602,7 @@ const ClaimBusinessForm = () => {
                   fontWeight: "600",
                   fontSize: "14px",
                 }}>
-                License Type (Retail, Cultivation, Delivery, Lounge, etc.) *
+                License Type (Retail, Cultivation, Delivery, Lounge, etc.) 
               </label>
               <input
                 type="text"
@@ -642,7 +626,7 @@ const ClaimBusinessForm = () => {
                   fontWeight: "600",
                   fontSize: "14px",
                 }}>
-                Expiration Date *
+                Expiration Date 
               </label>
               <input
                 type="date"
@@ -665,7 +649,7 @@ const ClaimBusinessForm = () => {
                   fontWeight: "600",
                   fontSize: "14px",
                 }}>
-                Jurisdiction (State/Province & Country) *
+                Jurisdiction (State/Province & Country) 
               </label>
               <input
                 type="text"
@@ -801,54 +785,7 @@ const ClaimBusinessForm = () => {
               )}
             </div>
 
-            <div style={{ marginBottom: "32px" }}>
-              <label
-                style={{
-                  display: "block",
-                  marginBottom: "12px",
-                  color: "#374151",
-                  fontWeight: "600",
-                  fontSize: "16px",
-                }}>
-                GPS Validation at business location
-              </label>
-              <button
-                type="button"
-                onClick={getGPSLocation}
-                style={{
-                  width: "100%",
-                  padding: "14px 24px",
-                  background: formData.gps_coordinates
-                    ? "#10b981"
-                    : "linear-gradient(135deg, #059669, #10b981)",
-                  color: "#ffffff",
-                  border: "none",
-                  borderRadius: "12px",
-                  fontWeight: "600",
-                  fontSize: "16px",
-                  cursor: "pointer",
-                  transition: "all 0.2s ease",
-                  boxShadow: "0 4px 6px -1px rgba(16, 185, 129, 0.2)",
-                }}
-                onMouseEnter={(e) => {
-                  e.target.style.transform = "translateY(-2px)";
-                  e.target.style.boxShadow = "0 8px 12px -1px rgba(16, 185, 129, 0.3)";
-                }}
-                onMouseLeave={(e) => {
-                  e.target.style.transform = "translateY(0)";
-                  e.target.style.boxShadow = "0 4px 6px -1px rgba(16, 185, 129, 0.2)";
-                }}>
-                {formData.gps_coordinates
-                  ? "✓ GPS Location Captured"
-                  : "Verify GPS"}
-              </button>
-              {formData.gps_coordinates && (
-                <p style={{ marginTop: "8px", color: "#10b981", fontSize: "14px" }}>
-                  Latitude: {formData.gps_coordinates.latitude.toFixed(6)}, Longitude:{" "}
-                  {formData.gps_coordinates.longitude.toFixed(6)}
-                </p>
-              )}
-            </div>
+            {/* GPS Validation temporarily hidden on frontend; backend support remains */}
           </div>
         );
 
