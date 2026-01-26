@@ -493,7 +493,7 @@ const cancelReject = () => {
         )}
 
         {/* Uploaded Documents */}
-        {selectedRequest.uploaded_documents && (
+        {(selectedRequest.uploaded_documents || selectedRequest.contact_person?.government_issued_id_document) && (
           <div style={{ marginBottom: 24 }}>
             <h3 style={{
               fontSize: 16,
@@ -505,12 +505,42 @@ const cancelReject = () => {
             }}>
               Uploaded Documents
             </h3>
-            {selectedRequest.uploaded_documents.state_license_document && (
+            {selectedRequest.uploaded_documents?.state_license_document && (
               <DetailRow 
                 label="State License" 
                 value={
                   <a 
                     href={selectedRequest.uploaded_documents.state_license_document} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    style={{ color: "#2563eb", textDecoration: "underline" }}
+                  >
+                    View Document
+                  </a>
+                } 
+              />
+            )}
+            {selectedRequest.uploaded_documents?.utility_bill && (
+              <DetailRow 
+                label="Utility Bill" 
+                value={
+                  <a 
+                    href={selectedRequest.uploaded_documents.utility_bill} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    style={{ color: "#2563eb", textDecoration: "underline" }}
+                  >
+                    View Document
+                  </a>
+                } 
+              />
+            )}
+            {selectedRequest.contact_person?.government_issued_id_document && (
+              <DetailRow 
+                label="Government ID" 
+                value={
+                  <a 
+                    href={selectedRequest.contact_person.government_issued_id_document} 
                     target="_blank" 
                     rel="noopener noreferrer"
                     style={{ color: "#2563eb", textDecoration: "underline" }}
