@@ -1,282 +1,855 @@
 import React, { useState } from "react";
 import OperatorLayout from "./OperatorLayout";
 import { toast } from "react-toastify";
+import {
+  useBusinessDashboard,
+  useBusinessLocation,
+  useBusinessProfile,
+  useUpdateBusinessProfile,
+  useToggleBusinessVisibility,
+  useUploadMenu,
+  useEngagementStats,
+} from "../services/business";
 
 const OperatorDashboard = () => {
-  const [selectedPlan, setSelectedPlan] = useState(null);
+  const [showProfileModal, setShowProfileModal] = useState(false);
+  const [showLocationModal, setShowLocationModal] = useState(false);
+  const [showMenuUpload, setShowMenuUpload] = useState(false);
+  const [profileFormData, setProfileFormData] = useState({});
 
-  // Dummy subscription plans
-  const subscriptionPlans = [
-    {
-      id: "basic",
-      name: "Basic Plan",
-      price: 49,
-      period: "month",
-      features: [
-        "Up to 1 business location",
-        "Basic business profile",
-        "Customer reviews management",
-        "Email support",
-        "Basic analytics",
-      ],
-      popular: false,
-    },
-    {
-      id: "professional",
-      name: "Professional Plan",
-      price: 99,
-      period: "month",
-      features: [
-        "Up to 5 business locations",
-        "Advanced business profile",
-        "Customer reviews management",
-        "Priority email support",
-        "Advanced analytics",
-        "Social media integration",
-        "Custom branding",
-      ],
-      popular: true,
-    },
-    {
-      id: "enterprise",
-      name: "Enterprise Plan",
-      price: 199,
-      period: "month",
-      features: [
-        "Unlimited business locations",
-        "Premium business profile",
-        "Customer reviews management",
-        "24/7 phone & email support",
-        "Advanced analytics & reporting",
-        "Social media integration",
-        "Custom branding",
-        "API access",
-        "Dedicated account manager",
-      ],
-      popular: false,
-    },
-  ];
+  // API Hooks
+  const { data: dashboardData, isLoading: dashboardLoading, error: dashboardError } = useBusinessDashboard();
+  const { data: locationData, isLoading: locationLoading } = useBusinessLocation();
+  const { data: profileData, isLoading: profileLoading } = useBusinessProfile();
+  const { data: engagementData } = useEngagementStats();
+  
+  const updateProfileMutation = useUpdateBusinessProfile();
+  const toggleVisibilityMutation = useToggleBusinessVisibility();
+  const uploadMenuMutation = useUploadMenu();
 
-  const handleSubscribe = (planId) => {
-    setSelectedPlan(planId);
-    toast.success(`Selected ${subscriptionPlans.find(p => p.id === planId)?.name}. Payment integration coming soon!`);
+  // Get dashboard data
+  const businessHealth = dashboardData?.data?.business_health;
+  const businessName = dashboardData?.data?.business_name;
+
+  // Handle visibility toggle
+  const handleToggleVisibility = async () => {
+    const currentVisibility = businessHealth?.visibility?.status === "visible";
+    try {
+      await toggleVisibilityMutation.mutateAsync(!currentVisibility);
+      toast.success(`Business is now ${!currentVisibility ? "visible" : "hidden"}`);
+    } catch (error) {
+      toast.error(error.message || "Failed to update visibility");
+    }
   };
+
+  // Handle menu upload
+  const handleMenuUpload = async (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    // Validate file type
+    const validTypes = ["image/jpeg", "image/jpg", "image/png", "application/pdf"];
+    if (!validTypes.includes(file.type)) {
+      toast.error("Please upload a JPEG, PNG, or PDF file");
+      return;
+    }
+
+    // Validate file size (20MB)
+    if (file.size > 20 * 1024 * 1024) {
+      toast.error("File size must be less than 20MB");
+      return;
+    }
+
+    try {
+      await uploadMenuMutation.mutateAsync(file);
+      toast.success("Menu uploaded successfully!");
+      setShowMenuUpload(false);
+    } catch (error) {
+      toast.error(error.message || "Failed to upload menu");
+    }
+  };
+
+  // Handle profile update
+  const handleProfileUpdate = async (e) => {
+    e.preventDefault();
+    try {
+      await updateProfileMutation.mutateAsync(profileFormData);
+      toast.success("Profile updated successfully!");
+      setShowProfileModal(false);
+      setProfileFormData({});
+    } catch (error) {
+      toast.error(error.message || "Failed to update profile");
+    }
+  };
+
+  // Get status colors
+  const getStatusColor = (status) => {
+    switch (status) {
+      case "verified":
+      case "visible":
+      case "uploaded":
+        return "#10b981"; // Green
+      case "pending_review":
+        return "#f59e0b"; // Yellow/Orange
+      case "hidden":
+      case "no_menu":
+      case "not_verified":
+        return "#ef4444"; // Red
+      default:
+        return "#6b7280"; // Gray
+    }
+  };
+
+  // Get status icon
+  const getStatusIcon = (type, status) => {
+    if (type === "verification") {
+      if (status === "verified") {
+        return (
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+            <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" stroke={getStatusColor(status)} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        );
+      }
+      return (
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+          <path d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" stroke={getStatusColor(status)} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      );
+    }
+    if (type === "visibility") {
+      if (status === "visible") {
+        return (
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+            <path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" stroke={getStatusColor(status)} strokeWidth="2" />
+            <path d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" stroke={getStatusColor(status)} strokeWidth="2" />
+          </svg>
+        );
+      }
+      return (
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+          <path d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" stroke={getStatusColor(status)} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      );
+    }
+    if (type === "menu") {
+      return (
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+          <path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" stroke={getStatusColor(status)} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      );
+    }
+    if (type === "engagement") {
+      return (
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+          <path d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" stroke={getStatusColor("default")} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      );
+    }
+  };
+
+  if (dashboardLoading) {
+    return (
+      <OperatorLayout>
+        <div style={{ textAlign: "center", padding: "40px" }}>
+          <p>Loading dashboard...</p>
+        </div>
+      </OperatorLayout>
+    );
+  }
+
+  if (dashboardError) {
+    return (
+      <OperatorLayout>
+        <div style={{ textAlign: "center", padding: "40px" }}>
+          <p style={{ color: "#ef4444" }}>Error loading dashboard. Please try again.</p>
+        </div>
+      </OperatorLayout>
+    );
+  }
 
   return (
     <OperatorLayout>
-      <div style={{
-        background: "#ffffff",
-        borderRadius: "20px",
-        boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
-        border: "1px solid #e2e8f0",
-        overflow: "hidden",
-      }}>
+      <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
         {/* Header */}
         <div style={{
-          background: "linear-gradient(135deg, #f8fafc, #f1f5f9)",
-          borderBottom: "1px solid #e2e8f0",
+          background: "#ffffff",
+          borderRadius: "16px",
           padding: "24px 32px",
+          boxShadow: "0 2px 4px rgba(0, 0, 0, 0.05)",
+          border: "1px solid #e2e8f0",
         }}>
           <h1 style={{
-            fontSize: "28px",
+            fontSize: "32px",
             fontWeight: "700",
             color: "#1e293b",
             margin: "0 0 8px 0",
           }}>
-            Subscription Plans
+            Your Business
           </h1>
           <p style={{
             color: "#64748b",
             fontSize: "16px",
             margin: 0,
           }}>
-            Choose the perfect plan for your business needs
+            {businessName || "Business Dashboard"}
           </p>
         </div>
 
-        {/* Content */}
+        {/* Business Health Section */}
         <div style={{
-          padding: "40px 32px",
+          background: "#ffffff",
+          borderRadius: "16px",
+          padding: "24px 32px",
+          boxShadow: "0 2px 4px rgba(0, 0, 0, 0.05)",
+          border: "1px solid #e2e8f0",
         }}>
-          {/* Plans Grid */}
+          <h2 style={{
+            fontSize: "20px",
+            fontWeight: "700",
+            color: "#1e293b",
+            margin: "0 0 24px 0",
+            textTransform: "uppercase",
+            letterSpacing: "0.5px",
+          }}>
+            Business Health
+          </h2>
           <div style={{
             display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))",
-            gap: "24px",
-            marginBottom: "32px",
+            gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
+            gap: "20px",
           }}>
-            {subscriptionPlans.map((plan) => (
-              <div
-                key={plan.id}
-                style={{
-                  background: plan.popular 
-                    ? "linear-gradient(135deg, #ffffff 0%, #f0fdf4 100%)"
-                    : "#ffffff",
-                  border: plan.popular 
-                    ? "2px solid #10b981"
-                    : "2px solid #e2e8f0",
-                  borderRadius: "16px",
-                  padding: "32px",
-                  position: "relative",
-                  transition: "all 0.3s ease",
-                  boxShadow: plan.popular 
-                    ? "0 8px 16px rgba(16, 185, 129, 0.15)"
-                    : "0 2px 4px rgba(0, 0, 0, 0.05)",
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.transform = "translateY(-4px)";
-                  e.currentTarget.style.boxShadow = plan.popular 
-                    ? "0 12px 24px rgba(16, 185, 129, 0.2)"
-                    : "0 8px 16px rgba(0, 0, 0, 0.1)";
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.transform = "translateY(0)";
-                  e.currentTarget.style.boxShadow = plan.popular 
-                    ? "0 8px 16px rgba(16, 185, 129, 0.15)"
-                    : "0 2px 4px rgba(0, 0, 0, 0.05)";
-                }}>
-                {/* Popular Badge */}
-                {plan.popular && (
-                  <div style={{
-                    position: "absolute",
-                    top: "-12px",
-                    left: "50%",
-                    transform: "translateX(-50%)",
-                    background: "linear-gradient(135deg, #10b981, #059669)",
-                    color: "#ffffff",
-                    padding: "6px 20px",
-                    borderRadius: "20px",
-                    fontSize: "12px",
-                    fontWeight: "700",
-                    boxShadow: "0 4px 8px rgba(16, 185, 129, 0.3)",
-                  }}>
-                    MOST POPULAR
-                  </div>
-                )}
-
-                {/* Plan Name */}
-                <h3 style={{
-                  fontSize: "24px",
-                  fontWeight: "700",
-                  color: "#1e293b",
-                  margin: "0 0 8px 0",
-                }}>
-                  {plan.name}
+            {/* Verification Card */}
+            <div style={{
+              background: "#f9fafb",
+              borderRadius: "12px",
+              padding: "20px",
+              border: "1px solid #e5e7eb",
+            }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "12px" }}>
+                {getStatusIcon("verification", businessHealth?.verification?.status)}
+                <h3 style={{ fontSize: "14px", fontWeight: "600", color: "#374151", margin: 0 }}>
+                  Verification
                 </h3>
-
-                {/* Price */}
-                <div style={{
-                  marginBottom: "24px",
-                }}>
-                  <span style={{
-                    fontSize: "48px",
-                    fontWeight: "800",
-                    color: "#10b981",
-                    lineHeight: "1",
-                  }}>
-                    ${plan.price}
-                  </span>
-                  <span style={{
-                    fontSize: "18px",
-                    color: "#64748b",
-                    marginLeft: "4px",
-                  }}>
-                    /{plan.period}
-                  </span>
-                </div>
-
-                {/* Features List */}
-                <ul style={{
-                  listStyle: "none",
-                  padding: 0,
-                  margin: "0 0 32px 0",
-                }}>
-                  {plan.features.map((feature, index) => (
-                    <li
-                      key={index}
-                      style={{
-                        padding: "12px 0",
-                        borderBottom: index < plan.features.length - 1 ? "1px solid #f1f5f9" : "none",
-                        display: "flex",
-                        alignItems: "flex-start",
-                        gap: "12px",
-                      }}>
-                      <svg
-                        width="20"
-                        height="20"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        style={{
-                          marginTop: "2px",
-                          flexShrink: 0,
-                        }}>
-                        <path
-                          d="M20 6L9 17l-5-5"
-                          stroke="#10b981"
-                          strokeWidth="2"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        />
-                      </svg>
-                      <span style={{
-                        color: "#475569",
-                        fontSize: "15px",
-                        lineHeight: "1.5",
-                      }}>
-                        {feature}
-                      </span>
-                    </li>
-                  ))}
-                </ul>
-
-                {/* Subscribe Button */}
-                <button
-                  onClick={() => handleSubscribe(plan.id)}
-                  style={{
-                    width: "100%",
-                    background: plan.popular
-                      ? "linear-gradient(135deg, #10b981, #059669)"
-                      : selectedPlan === plan.id
-                      ? "linear-gradient(135deg, #10b981, #059669)"
-                      : "linear-gradient(135deg, #f1f5f9, #e2e8f0)",
-                    color: plan.popular || selectedPlan === plan.id ? "#ffffff" : "#475569",
-                    border: "none",
-                    borderRadius: "12px",
-                    padding: "16px 24px",
-                    fontSize: "16px",
-                    fontWeight: "700",
-                    cursor: "pointer",
-                    transition: "all 0.2s ease",
-                    boxShadow: plan.popular
-                      ? "0 4px 8px rgba(16, 185, 129, 0.3)"
-                      : "0 2px 4px rgba(0, 0, 0, 0.1)",
-                  }}
-                  onMouseEnter={(e) => {
-                    if (!plan.popular && selectedPlan !== plan.id) {
-                      e.target.style.background = "linear-gradient(135deg, #10b981, #059669)";
-                      e.target.style.color = "#ffffff";
-                      e.target.style.transform = "translateY(-2px)";
-                      e.target.style.boxShadow = "0 4px 8px rgba(16, 185, 129, 0.3)";
-                    }
-                  }}
-                  onMouseLeave={(e) => {
-                    if (!plan.popular && selectedPlan !== plan.id) {
-                      e.target.style.background = "linear-gradient(135deg, #f1f5f9, #e2e8f0)";
-                      e.target.style.color = "#475569";
-                      e.target.style.transform = "translateY(0)";
-                      e.target.style.boxShadow = "0 2px 4px rgba(0, 0, 0, 0.1)";
-                    }
-                  }}>
-                  {selectedPlan === plan.id ? "Selected" : "Subscribe Now"}
-                </button>
               </div>
-            ))}
+              <p style={{
+                fontSize: "16px",
+                fontWeight: "600",
+                color: getStatusColor(businessHealth?.verification?.status),
+                margin: "4px 0 0 0",
+              }}>
+                {businessHealth?.verification?.message || "Pending Review"}
+              </p>
+            </div>
+
+            {/* Visibility Card */}
+            <div style={{
+              background: "#f9fafb",
+              borderRadius: "12px",
+              padding: "20px",
+              border: "1px solid #e5e7eb",
+              cursor: "pointer",
+            }}
+            onClick={handleToggleVisibility}
+            title="Click to toggle visibility">
+              <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "12px" }}>
+                {getStatusIcon("visibility", businessHealth?.visibility?.status)}
+                <h3 style={{ fontSize: "14px", fontWeight: "600", color: "#374151", margin: 0 }}>
+                  Visibility
+                </h3>
+              </div>
+              <p style={{
+                fontSize: "16px",
+                fontWeight: "600",
+                color: getStatusColor(businessHealth?.visibility?.status),
+                margin: "4px 0 0 0",
+              }}>
+                {businessHealth?.visibility?.message || "Visible"}
+              </p>
+              <p style={{ fontSize: "12px", color: "#6b7280", margin: "4px 0 0 0" }}>
+                {businessHealth?.visibility?.status === "visible" ? "Not visible" : "Visible"}
+              </p>
+            </div>
+
+            {/* Menu Freshness Card */}
+            <div style={{
+              background: "#f9fafb",
+              borderRadius: "12px",
+              padding: "20px",
+              border: "1px solid #e5e7eb",
+            }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "12px" }}>
+                {getStatusIcon("menu", businessHealth?.menu_freshness?.status)}
+                <h3 style={{ fontSize: "14px", fontWeight: "600", color: "#374151", margin: 0 }}>
+                  Menu Freshness
+                </h3>
+              </div>
+              <p style={{
+                fontSize: "16px",
+                fontWeight: "600",
+                color: getStatusColor(businessHealth?.menu_freshness?.status),
+                margin: "4px 0 0 0",
+              }}>
+                {businessHealth?.menu_freshness?.message || "No menu"}
+              </p>
+              <p style={{ fontSize: "12px", color: "#6b7280", margin: "4px 0 0 0" }}>
+                {businessHealth?.menu_freshness?.status === "uploaded" ? "Menu uploaded" : "Upload a menu"}
+              </p>
+            </div>
+
+            {/* Engagement Card */}
+            <div style={{
+              background: "#f9fafb",
+              borderRadius: "12px",
+              padding: "20px",
+              border: "1px solid #e5e7eb",
+            }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "12px" }}>
+                {getStatusIcon("engagement", "default")}
+                <h3 style={{ fontSize: "14px", fontWeight: "600", color: "#374151", margin: 0 }}>
+                  Engagement
+                </h3>
+              </div>
+              <p style={{
+                fontSize: "16px",
+                fontWeight: "600",
+                color: "#1e293b",
+                margin: "4px 0 0 0",
+              }}>
+                {businessHealth?.engagement?.count !== undefined ? businessHealth.engagement.count : engagementData?.data?.view_count || 0}
+              </p>
+              <p style={{ fontSize: "12px", color: "#6b7280", margin: "4px 0 0 0" }}>
+                {businessHealth?.engagement?.message || "Views this week"}
+              </p>
+            </div>
           </div>
         </div>
+
+        {/* Manage Section */}
+        <div style={{
+          background: "#ffffff",
+          borderRadius: "16px",
+          padding: "24px 32px",
+          boxShadow: "0 2px 4px rgba(0, 0, 0, 0.05)",
+          border: "1px solid #e2e8f0",
+        }}>
+          <h2 style={{
+            fontSize: "20px",
+            fontWeight: "700",
+            color: "#1e293b",
+            margin: "0 0 24px 0",
+            textTransform: "uppercase",
+            letterSpacing: "0.5px",
+          }}>
+            Manage
+          </h2>
+          <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+            {/* Locations */}
+            <div
+              onClick={() => setShowLocationModal(true)}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                padding: "16px 20px",
+                background: "#f9fafb",
+                borderRadius: "12px",
+                border: "1px solid #e5e7eb",
+                cursor: "pointer",
+                transition: "all 0.2s ease",
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = "#f3f4f6";
+                e.currentTarget.style.borderColor = "#10b981";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = "#f9fafb";
+                e.currentTarget.style.borderColor = "#e5e7eb";
+              }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
+                <div style={{
+                  width: "40px",
+                  height: "40px",
+                  borderRadius: "10px",
+                  background: "linear-gradient(135deg, #10b981, #059669)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}>
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                    <path d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                    <path d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                </div>
+                <div>
+                  <h3 style={{ fontSize: "16px", fontWeight: "600", color: "#1e293b", margin: "0 0 4px 0" }}>
+                    Locations
+                  </h3>
+                  <p style={{ fontSize: "14px", color: "#6b7280", margin: 0 }}>
+                    View and manage your business address
+                  </p>
+                </div>
+              </div>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                <path d="M9 18l6-6-6-6" stroke="#6b7280" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </div>
+
+            {/* Profile Information */}
+            <div
+              onClick={() => {
+                if (profileData?.data) {
+                  setProfileFormData(profileData.data);
+                }
+                setShowProfileModal(true);
+              }}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                padding: "16px 20px",
+                background: "#f9fafb",
+                borderRadius: "12px",
+                border: "1px solid #e5e7eb",
+                cursor: "pointer",
+                transition: "all 0.2s ease",
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = "#f3f4f6";
+                e.currentTarget.style.borderColor = "#10b981";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = "#f9fafb";
+                e.currentTarget.style.borderColor = "#e5e7eb";
+              }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
+                <div style={{
+                  width: "40px",
+                  height: "40px",
+                  borderRadius: "10px",
+                  background: "linear-gradient(135deg, #3b82f6, #2563eb)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}>
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                    <path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                </div>
+                <div>
+                  <h3 style={{ fontSize: "16px", fontWeight: "600", color: "#1e293b", margin: "0 0 4px 0" }}>
+                    Profile Information
+                  </h3>
+                  <p style={{ fontSize: "14px", color: "#6b7280", margin: 0 }}>
+                    Update name, hours, contact details
+                  </p>
+                </div>
+              </div>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                <path d="M9 18l6-6-6-6" stroke="#6b7280" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </div>
+
+            {/* Menu Snapshot */}
+            <div
+              onClick={() => setShowMenuUpload(true)}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                padding: "16px 20px",
+                background: "#f9fafb",
+                borderRadius: "12px",
+                border: "1px solid #e5e7eb",
+                cursor: "pointer",
+                transition: "all 0.2s ease",
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = "#f3f4f6";
+                e.currentTarget.style.borderColor = "#10b981";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = "#f9fafb";
+                e.currentTarget.style.borderColor = "#e5e7eb";
+              }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
+                <div style={{
+                  width: "40px",
+                  height: "40px",
+                  borderRadius: "10px",
+                  background: "linear-gradient(135deg, #f59e0b, #d97706)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}>
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                    <path d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                </div>
+                <div style={{ flex: 1 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "4px" }}>
+                    <h3 style={{ fontSize: "16px", fontWeight: "600", color: "#1e293b", margin: 0 }}>
+                      Menu Snapshot
+                    </h3>
+                    {businessHealth?.menu_freshness?.status === "no_menu" && (
+                      <span style={{
+                        fontSize: "12px",
+                        fontWeight: "600",
+                        color: "#ffffff",
+                        background: "#10b981",
+                        padding: "2px 8px",
+                        borderRadius: "4px",
+                      }}>
+                        ADD
+                      </span>
+                    )}
+                  </div>
+                  <p style={{ fontSize: "14px", color: "#6b7280", margin: 0 }}>
+                    Upload your latest menu image or PDF
+                  </p>
+                </div>
+              </div>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                <path d="M9 18l6-6-6-6" stroke="#6b7280" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        {/* Verification in Progress Alert */}
+        {businessHealth?.verification?.status === "pending_review" && (
+          <div style={{
+            background: "linear-gradient(135deg, #10b981, #059669)",
+            borderRadius: "16px",
+            padding: "20px 24px",
+            color: "#ffffff",
+            display: "flex",
+            alignItems: "center",
+            gap: "16px",
+          }}>
+            <div style={{
+              width: "40px",
+              height: "40px",
+              borderRadius: "10px",
+              background: "rgba(255, 255, 255, 0.2)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+            }}>
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                <path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </div>
+            <div>
+              <h3 style={{ fontSize: "18px", fontWeight: "700", margin: "0 0 4px 0" }}>
+                Verification in Progress
+              </h3>
+              <p style={{ fontSize: "14px", margin: 0, opacity: 0.9 }}>
+                Your request is being reviewed. We'll notify you once approved.
+              </p>
+            </div>
+          </div>
+        )}
       </div>
+
+      {/* Location Modal */}
+      {showLocationModal && (
+        <div style={{
+          position: "fixed",
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: "rgba(0, 0, 0, 0.5)",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          zIndex: 1000,
+        }}
+        onClick={() => setShowLocationModal(false)}>
+          <div style={{
+            background: "#ffffff",
+            borderRadius: "16px",
+            padding: "24px",
+            maxWidth: "500px",
+            width: "90%",
+            maxHeight: "80vh",
+            overflow: "auto",
+          }}
+          onClick={(e) => e.stopPropagation()}>
+            <h2 style={{ fontSize: "24px", fontWeight: "700", margin: "0 0 20px 0" }}>
+              Business Location
+            </h2>
+            {locationLoading ? (
+              <p>Loading location...</p>
+            ) : locationData?.data ? (
+              <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+                <div>
+                  <label style={{ fontSize: "14px", fontWeight: "600", color: "#374151", display: "block", marginBottom: "4px" }}>
+                    Address
+                  </label>
+                  <p style={{ fontSize: "16px", color: "#1e293b", margin: 0 }}>
+                    {locationData.data.address}
+                  </p>
+                </div>
+                <div>
+                  <label style={{ fontSize: "14px", fontWeight: "600", color: "#374151", display: "block", marginBottom: "4px" }}>
+                    City, State
+                  </label>
+                  <p style={{ fontSize: "16px", color: "#1e293b", margin: 0 }}>
+                    {locationData.data.city}, {locationData.data.state} {locationData.data.postal_code}
+                  </p>
+                </div>
+                <div>
+                  <label style={{ fontSize: "14px", fontWeight: "600", color: "#374151", display: "block", marginBottom: "4px" }}>
+                    Coordinates
+                  </label>
+                  <p style={{ fontSize: "16px", color: "#1e293b", margin: 0 }}>
+                    {locationData.data.coordinates?.lat?.toFixed(6)}, {locationData.data.coordinates?.lng?.toFixed(6)}
+                  </p>
+                </div>
+              </div>
+            ) : (
+              <p>No location data available</p>
+            )}
+            <button
+              onClick={() => setShowLocationModal(false)}
+              style={{
+                marginTop: "20px",
+                width: "100%",
+                padding: "12px",
+                background: "#f3f4f6",
+                border: "none",
+                borderRadius: "8px",
+                fontSize: "16px",
+                fontWeight: "600",
+                color: "#374151",
+                cursor: "pointer",
+              }}>
+              Close
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Profile Modal */}
+      {showProfileModal && (
+        <div style={{
+          position: "fixed",
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: "rgba(0, 0, 0, 0.5)",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          zIndex: 1000,
+        }}
+        onClick={() => setShowProfileModal(false)}>
+          <div style={{
+            background: "#ffffff",
+            borderRadius: "16px",
+            padding: "24px",
+            maxWidth: "600px",
+            width: "90%",
+            maxHeight: "80vh",
+            overflow: "auto",
+          }}
+          onClick={(e) => e.stopPropagation()}>
+            <h2 style={{ fontSize: "24px", fontWeight: "700", margin: "0 0 20px 0" }}>
+              Profile Information
+            </h2>
+            <form onSubmit={handleProfileUpdate}>
+              <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+                <div>
+                  <label style={{ fontSize: "14px", fontWeight: "600", color: "#374151", display: "block", marginBottom: "4px" }}>
+                    Business Name
+                  </label>
+                  <input
+                    type="text"
+                    value={profileFormData.business_name || ""}
+                    onChange={(e) => setProfileFormData({ ...profileFormData, business_name: e.target.value })}
+                    style={{
+                      width: "100%",
+                      padding: "10px 12px",
+                      border: "1px solid #d1d5db",
+                      borderRadius: "8px",
+                      fontSize: "16px",
+                    }}
+                  />
+                </div>
+                <div>
+                  <label style={{ fontSize: "14px", fontWeight: "600", color: "#374151", display: "block", marginBottom: "4px" }}>
+                    Phone
+                  </label>
+                  <input
+                    type="tel"
+                    value={profileFormData.phone || ""}
+                    onChange={(e) => setProfileFormData({ ...profileFormData, phone: e.target.value })}
+                    style={{
+                      width: "100%",
+                      padding: "10px 12px",
+                      border: "1px solid #d1d5db",
+                      borderRadius: "8px",
+                      fontSize: "16px",
+                    }}
+                  />
+                </div>
+                <div>
+                  <label style={{ fontSize: "14px", fontWeight: "600", color: "#374151", display: "block", marginBottom: "4px" }}>
+                    Email
+                  </label>
+                  <input
+                    type="email"
+                    value={profileFormData.email || ""}
+                    onChange={(e) => setProfileFormData({ ...profileFormData, email: e.target.value })}
+                    style={{
+                      width: "100%",
+                      padding: "10px 12px",
+                      border: "1px solid #d1d5db",
+                      borderRadius: "8px",
+                      fontSize: "16px",
+                    }}
+                  />
+                </div>
+                <div>
+                  <label style={{ fontSize: "14px", fontWeight: "600", color: "#374151", display: "block", marginBottom: "4px" }}>
+                    Website
+                  </label>
+                  <input
+                    type="url"
+                    value={profileFormData.website || ""}
+                    onChange={(e) => setProfileFormData({ ...profileFormData, website: e.target.value })}
+                    style={{
+                      width: "100%",
+                      padding: "10px 12px",
+                      border: "1px solid #d1d5db",
+                      borderRadius: "8px",
+                      fontSize: "16px",
+                    }}
+                  />
+                </div>
+                <div>
+                  <label style={{ fontSize: "14px", fontWeight: "600", color: "#374151", display: "block", marginBottom: "4px" }}>
+                    Description
+                  </label>
+                  <textarea
+                    value={profileFormData.description || ""}
+                    onChange={(e) => setProfileFormData({ ...profileFormData, description: e.target.value })}
+                    rows={4}
+                    style={{
+                      width: "100%",
+                      padding: "10px 12px",
+                      border: "1px solid #d1d5db",
+                      borderRadius: "8px",
+                      fontSize: "16px",
+                      resize: "vertical",
+                    }}
+                  />
+                </div>
+              </div>
+              <div style={{ display: "flex", gap: "12px", marginTop: "24px" }}>
+                <button
+                  type="button"
+                  onClick={() => setShowProfileModal(false)}
+                  style={{
+                    flex: 1,
+                    padding: "12px",
+                    background: "#f3f4f6",
+                    border: "none",
+                    borderRadius: "8px",
+                    fontSize: "16px",
+                    fontWeight: "600",
+                    color: "#374151",
+                    cursor: "pointer",
+                  }}>
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={updateProfileMutation.isPending}
+                  style={{
+                    flex: 1,
+                    padding: "12px",
+                    background: updateProfileMutation.isPending ? "#9ca3af" : "linear-gradient(135deg, #10b981, #059669)",
+                    border: "none",
+                    borderRadius: "8px",
+                    fontSize: "16px",
+                    fontWeight: "600",
+                    color: "#ffffff",
+                    cursor: updateProfileMutation.isPending ? "not-allowed" : "pointer",
+                  }}>
+                  {updateProfileMutation.isPending ? "Saving..." : "Save Changes"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Menu Upload Modal */}
+      {showMenuUpload && (
+        <div style={{
+          position: "fixed",
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: "rgba(0, 0, 0, 0.5)",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          zIndex: 1000,
+        }}
+        onClick={() => setShowMenuUpload(false)}>
+          <div style={{
+            background: "#ffffff",
+            borderRadius: "16px",
+            padding: "24px",
+            maxWidth: "500px",
+            width: "90%",
+          }}
+          onClick={(e) => e.stopPropagation()}>
+            <h2 style={{ fontSize: "24px", fontWeight: "700", margin: "0 0 20px 0" }}>
+              Upload Menu
+            </h2>
+            <p style={{ fontSize: "14px", color: "#6b7280", margin: "0 0 20px 0" }}>
+              Upload a JPEG, PNG, or PDF file (max 20MB)
+            </p>
+            <input
+              type="file"
+              accept=".jpg,.jpeg,.png,.pdf"
+              onChange={handleMenuUpload}
+              style={{
+                width: "100%",
+                padding: "12px",
+                border: "2px dashed #d1d5db",
+                borderRadius: "8px",
+                fontSize: "16px",
+                cursor: "pointer",
+              }}
+            />
+            <button
+              onClick={() => setShowMenuUpload(false)}
+              style={{
+                marginTop: "20px",
+                width: "100%",
+                padding: "12px",
+                background: "#f3f4f6",
+                border: "none",
+                borderRadius: "8px",
+                fontSize: "16px",
+                fontWeight: "600",
+                color: "#374151",
+                cursor: "pointer",
+              }}>
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
     </OperatorLayout>
   );
 };
 
 export default OperatorDashboard;
-
