@@ -40,6 +40,7 @@ const ClaimBusinessForm = () => {
     state_license_document: null,
     utility_bill: null,
     gps_coordinates: null,
+    ownership_attestation: false,
   });
 
   // Pre-populate from URL params (if coming from mobile app)
@@ -75,6 +76,14 @@ const ClaimBusinessForm = () => {
         [name]: file,
       }));
     }
+  };
+
+  const handleCheckboxChange = (e) => {
+    const { name, checked } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: checked,
+    }));
   };
 
   const handleNext = () => {
@@ -170,6 +179,9 @@ const ClaimBusinessForm = () => {
           JSON.stringify(formData.gps_coordinates)
         );
       }
+
+      // Ownership Attestation (required - must be true)
+      submitData.append("ownership_attestation", formData.ownership_attestation);
 
       // File uploads
       if (formData.state_license_document) {
@@ -786,6 +798,48 @@ const ClaimBusinessForm = () => {
             </div>
 
             {/* GPS Validation temporarily hidden on frontend; backend support remains */}
+
+            {/* Ownership Attestation Checkbox */}
+            <div
+              style={{
+                marginTop: "48px",
+                padding: "24px",
+                background: "#f9fafb",
+                borderRadius: "12px",
+                border: "2px solid #e5e7eb",
+              }}>
+              <label
+                style={{
+                  display: "flex",
+                  alignItems: "flex-start",
+                  gap: "12px",
+                  cursor: "pointer",
+                  userSelect: "none",
+                }}>
+                <input
+                  type="checkbox"
+                  name="ownership_attestation"
+                  checked={formData.ownership_attestation}
+                  onChange={handleCheckboxChange}
+                  style={{
+                    width: "20px",
+                    height: "20px",
+                    marginTop: "2px",
+                    cursor: "pointer",
+                    accentColor: "#10b981",
+                  }}
+                />
+                <span
+                  style={{
+                    fontSize: "16px",
+                    color: "#374151",
+                    fontWeight: "500",
+                    lineHeight: "1.5",
+                  }}>
+                  I legally assert I have rights to claim this business. *
+                </span>
+              </label>
+            </div>
           </div>
         );
 
@@ -956,24 +1010,29 @@ const ClaimBusinessForm = () => {
             <button
               type="button"
               onClick={handleSubmit}
-              disabled={isSubmitting}
+              disabled={isSubmitting || !formData.ownership_attestation}
               style={{
                 flex: 1,
                 padding: "14px 32px",
-                background: isSubmitting
-                  ? "#9ca3af"
-                  : "linear-gradient(135deg, #059669, #10b981)",
+                background:
+                  isSubmitting || !formData.ownership_attestation
+                    ? "#9ca3af"
+                    : "linear-gradient(135deg, #059669, #10b981)",
                 color: "#ffffff",
                 border: "none",
                 borderRadius: "12px",
                 fontWeight: "600",
                 fontSize: "16px",
-                cursor: isSubmitting ? "not-allowed" : "pointer",
+                cursor:
+                  isSubmitting || !formData.ownership_attestation
+                    ? "not-allowed"
+                    : "pointer",
                 transition: "all 0.2s ease",
-                boxShadow: isSubmitting
-                  ? "none"
-                  : "0 4px 6px -1px rgba(16, 185, 129, 0.2)",
-                opacity: isSubmitting ? 0.7 : 1,
+                boxShadow:
+                  isSubmitting || !formData.ownership_attestation
+                    ? "none"
+                    : "0 4px 6px -1px rgba(16, 185, 129, 0.2)",
+                opacity: isSubmitting || !formData.ownership_attestation ? 0.7 : 1,
               }}
               onMouseEnter={(e) => {
                 if (!isSubmitting) {
