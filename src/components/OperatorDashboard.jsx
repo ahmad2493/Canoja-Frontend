@@ -15,6 +15,7 @@ const OperatorDashboard = () => {
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [showLocationModal, setShowLocationModal] = useState(false);
   const [showMenuUpload, setShowMenuUpload] = useState(false);
+  const [showMenuViewer, setShowMenuViewer] = useState(false);
   const [profileFormData, setProfileFormData] = useState({});
 
   // API Hooks
@@ -30,6 +31,7 @@ const OperatorDashboard = () => {
   // Get dashboard data
   const businessHealth = dashboardData?.data?.business_health;
   const businessName = dashboardData?.data?.business_name;
+  const menuUrl = dashboardData?.data?.menu_url;
 
   // Handle visibility toggle
   const handleToggleVisibility = async () => {
@@ -73,7 +75,9 @@ const OperatorDashboard = () => {
   const handleProfileUpdate = async (e) => {
     e.preventDefault();
     try {
-      await updateProfileMutation.mutateAsync(profileFormData);
+      // Remove email from update data - it cannot be changed
+      const { email, ...updateData } = profileFormData;
+      await updateProfileMutation.mutateAsync(updateData);
       toast.success("Profile updated successfully!");
       setShowProfileModal(false);
       setProfileFormData({});
@@ -451,7 +455,6 @@ const OperatorDashboard = () => {
 
             {/* Menu Snapshot */}
             <div
-              onClick={() => setShowMenuUpload(true)}
               style={{
                 display: "flex",
                 alignItems: "center",
@@ -460,18 +463,9 @@ const OperatorDashboard = () => {
                 background: "#f9fafb",
                 borderRadius: "12px",
                 border: "1px solid #e5e7eb",
-                cursor: "pointer",
                 transition: "all 0.2s ease",
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.background = "#f3f4f6";
-                e.currentTarget.style.borderColor = "#10b981";
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.background = "#f9fafb";
-                e.currentTarget.style.borderColor = "#e5e7eb";
               }}>
-              <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "16px", flex: 1 }}>
                 <div style={{
                   width: "40px",
                   height: "40px",
@@ -504,13 +498,64 @@ const OperatorDashboard = () => {
                     )}
                   </div>
                   <p style={{ fontSize: "14px", color: "#6b7280", margin: 0 }}>
-                    Upload your latest menu image or PDF
+                    {menuUrl ? "View or update your menu" : "Upload your latest menu image or PDF"}
                   </p>
                 </div>
               </div>
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-                <path d="M9 18l6-6-6-6" stroke="#6b7280" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
+              <div style={{ display: "flex", gap: "8px" }}>
+                {menuUrl && (
+                  <button
+                    onClick={() => setShowMenuViewer(true)}
+                    style={{
+                      padding: "8px 16px",
+                      background: "linear-gradient(135deg, #3b82f6, #2563eb)",
+                      border: "none",
+                      borderRadius: "8px",
+                      fontSize: "14px",
+                      fontWeight: "600",
+                      color: "#ffffff",
+                      cursor: "pointer",
+                      transition: "all 0.2s ease",
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.opacity = "0.9";
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.opacity = "1";
+                    }}>
+                    View
+                  </button>
+                )}
+                <button
+                  onClick={() => setShowMenuUpload(true)}
+                  style={{
+                    padding: "8px 16px",
+                    background: menuUrl ? "#f3f4f6" : "linear-gradient(135deg, #10b981, #059669)",
+                    border: "none",
+                    borderRadius: "8px",
+                    fontSize: "14px",
+                    fontWeight: "600",
+                    color: menuUrl ? "#374151" : "#ffffff",
+                    cursor: "pointer",
+                    transition: "all 0.2s ease",
+                  }}
+                  onMouseEnter={(e) => {
+                    if (menuUrl) {
+                      e.currentTarget.style.background = "#e5e7eb";
+                    } else {
+                      e.currentTarget.style.opacity = "0.9";
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (menuUrl) {
+                      e.currentTarget.style.background = "#f3f4f6";
+                    } else {
+                      e.currentTarget.style.opacity = "1";
+                    }
+                  }}>
+                  {menuUrl ? "Update" : "Upload"}
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -702,15 +747,22 @@ const OperatorDashboard = () => {
                   <input
                     type="email"
                     value={profileFormData.email || ""}
-                    onChange={(e) => setProfileFormData({ ...profileFormData, email: e.target.value })}
+                    disabled
+                    readOnly
                     style={{
                       width: "100%",
                       padding: "10px 12px",
                       border: "1px solid #d1d5db",
                       borderRadius: "8px",
                       fontSize: "16px",
+                      background: "#f3f4f6",
+                      color: "#6b7280",
+                      cursor: "not-allowed",
                     }}
                   />
+                  <p style={{ fontSize: "12px", color: "#6b7280", margin: "4px 0 0 0" }}>
+                    Email cannot be changed 
+                  </p>
                 </div>
                 <div>
                   <label style={{ fontSize: "14px", fontWeight: "600", color: "#374151", display: "block", marginBottom: "4px" }}>
@@ -845,6 +897,153 @@ const OperatorDashboard = () => {
               }}>
               Cancel
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* Menu Viewer Modal */}
+      {showMenuViewer && menuUrl && (
+        <div style={{
+          position: "fixed",
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: "rgba(0, 0, 0, 0.8)",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          zIndex: 1000,
+        }}
+        onClick={() => setShowMenuViewer(false)}>
+          <div style={{
+            background: "#1e293b",
+            borderRadius: "16px",
+            padding: "0",
+            maxWidth: "90vw",
+            maxHeight: "90vh",
+            width: "100%",
+            display: "flex",
+            flexDirection: "column",
+            overflow: "hidden",
+          }}
+          onClick={(e) => e.stopPropagation()}>
+            <div style={{ 
+              display: "flex", 
+              justifyContent: "space-between", 
+              alignItems: "center", 
+              padding: "16px 24px",
+              background: "#1e293b",
+              borderBottom: "1px solid rgba(255, 255, 255, 0.1)",
+            }}>
+              <h2 style={{ fontSize: "20px", fontWeight: "700", margin: 0, color: "#ffffff" }}>
+                Menu
+              </h2>
+              <button
+                onClick={() => setShowMenuViewer(false)}
+                style={{
+                  background: "transparent",
+                  border: "none",
+                  fontSize: "28px",
+                  cursor: "pointer",
+                  color: "#ffffff",
+                  padding: "4px 8px",
+                  lineHeight: "1",
+                  opacity: 0.8,
+                }}
+                onMouseEnter={(e) => e.currentTarget.style.opacity = "1"}
+                onMouseLeave={(e) => e.currentTarget.style.opacity = "0.8"}>
+                ×
+              </button>
+            </div>
+            <div style={{
+              flex: 1,
+              overflow: "auto",
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "flex-start",
+              background: "#0f172a",
+              padding: "0",
+            }}>
+              {menuUrl.endsWith('.pdf') || menuUrl.includes('.pdf') ? (
+                <iframe
+                  src={`${menuUrl}#toolbar=0&navpanes=0&scrollbar=0`}
+                  style={{
+                    width: "100%",
+                    height: "calc(90vh - 120px)",
+                    border: "none",
+                    background: "#0f172a",
+                  }}
+                  title="Menu PDF"
+                />
+              ) : (
+                <img
+                  src={menuUrl}
+                  alt="Menu"
+                  style={{
+                    maxWidth: "100%",
+                    height: "auto",
+                    display: "block",
+                  }}
+                />
+              )}
+            </div>
+            <div style={{ 
+              display: "flex", 
+              gap: "12px", 
+              padding: "16px 24px",
+              background: "#1e293b",
+              borderTop: "1px solid rgba(255, 255, 255, 0.1)",
+            }}>
+              <a
+                href={menuUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{
+                  flex: 1,
+                  padding: "12px",
+                  background: "rgba(255, 255, 255, 0.1)",
+                  border: "1px solid rgba(255, 255, 255, 0.2)",
+                  borderRadius: "8px",
+                  fontSize: "16px",
+                  fontWeight: "600",
+                  color: "#ffffff",
+                  textDecoration: "none",
+                  textAlign: "center",
+                  cursor: "pointer",
+                  transition: "all 0.2s ease",
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = "rgba(255, 255, 255, 0.2)";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = "rgba(255, 255, 255, 0.1)";
+                }}>
+                Open in New Tab
+              </a>
+              <button
+                onClick={() => setShowMenuViewer(false)}
+                style={{
+                  flex: 1,
+                  padding: "12px",
+                  background: "rgba(255, 255, 255, 0.1)",
+                  border: "1px solid rgba(255, 255, 255, 0.2)",
+                  borderRadius: "8px",
+                  fontSize: "16px",
+                  fontWeight: "600",
+                  color: "#ffffff",
+                  cursor: "pointer",
+                  transition: "all 0.2s ease",
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = "rgba(255, 255, 255, 0.2)";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = "rgba(255, 255, 255, 0.1)";
+                }}>
+                Close
+              </button>
+            </div>
           </div>
         </div>
       )}
