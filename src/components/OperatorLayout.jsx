@@ -3,9 +3,10 @@ import { useNavigate } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import OperatorHeader from "./OperatorHeader";
 import Sidebar from "./Sidebar";
-import { useAuth } from "../context/AuthContext"; 
+import { useAuth } from "../context/AuthContext";
 import { toast } from "react-toastify";
 import ChangePasswordModal from "./ChangePasswordModal";
+import api from "../services/api";
 
 const OperatorLayout = ({ children }) => {
   const navigate = useNavigate();
@@ -14,25 +15,29 @@ const OperatorLayout = ({ children }) => {
   const [showChangePassword, setShowChangePassword] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
     try {
+      // Call backend logout to clear refresh token from DB
+      await api.post("/users/logout").catch(() => {});
+
       // Clear React Query cache
       queryClient.clear();
-      
-      // Call AuthContext logout (removes token + updates state)
+
+      // Call AuthContext logout (removes tokens + updates state)
       logout();
-      
+
       // Show success message
       toast.success("Logged out successfully");
-      
+
       // Redirect to login page
       navigate("/login");
-      
+
     } catch (error) {
       console.error("Logout error:", error);
       toast.error("Error during logout");
-      
-      // Force redirect anyway
+
+      // Force cleanup anyway
+      logout();
       navigate("/login");
     }
   };

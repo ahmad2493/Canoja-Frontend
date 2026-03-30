@@ -48,8 +48,8 @@ const Login = () => {
 			// Check if password change is required
 			const requiresPasswordChange = response.user?.requiresPasswordChange === true;
 			
-			// Set user state
-			login(response.token, response.user);
+			// Set user state with refresh token
+			login(response.token, response.user, response.refreshToken);
 			
 			if (requiresPasswordChange) {
 				// Set flag to show forced password change screen

@@ -8,44 +8,42 @@ const Sidebar = ({ isOpen, onToggle, onChangePassword }) => {
         onClick={onToggle}
         style={{
           position: "fixed",
-          left: "20px",
-          top: "88px",
-          width: "48px",
-          height: "48px",
-          background: isOpen 
-            ? "linear-gradient(135deg, #ef4444, #dc2626)"
-            : "linear-gradient(135deg, #10b981, #059669)",
-          border: "none",
-          borderRadius: "12px",
+          left: "12px",
+          top: "84px",
+          width: "36px",
+          height: "36px",
+          background: isOpen
+            ? "rgba(239, 68, 68, 0.08)"
+            : "rgba(16, 185, 129, 0.08)",
+          border: `1.5px solid ${isOpen ? "#ef4444" : "#10b981"}`,
+          borderRadius: "8px",
           cursor: "pointer",
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          boxShadow: isOpen
-            ? "0 4px 12px rgba(239, 68, 68, 0.3)"
-            : "0 4px 12px rgba(16, 185, 129, 0.3)",
-          transition: "all 0.3s ease",
+          transition: "all 0.25s ease",
           zIndex: 1000,
+          padding: 0,
         }}
         onMouseEnter={(e) => {
-          e.target.style.transform = "scale(1.05)";
-          e.target.style.boxShadow = isOpen
-            ? "0 6px 16px rgba(239, 68, 68, 0.4)"
-            : "0 6px 16px rgba(16, 185, 129, 0.4)";
+          e.currentTarget.style.background = isOpen
+            ? "rgba(239, 68, 68, 0.15)"
+            : "rgba(16, 185, 129, 0.15)";
+          e.currentTarget.style.transform = "scale(1.05)";
         }}
         onMouseLeave={(e) => {
-          e.target.style.transform = "scale(1)";
-          e.target.style.boxShadow = isOpen
-            ? "0 4px 12px rgba(239, 68, 68, 0.3)"
-            : "0 4px 12px rgba(16, 185, 129, 0.3)";
+          e.currentTarget.style.background = isOpen
+            ? "rgba(239, 68, 68, 0.08)"
+            : "rgba(16, 185, 129, 0.08)";
+          e.currentTarget.style.transform = "scale(1)";
         }}>
         {isOpen ? (
           <svg
-            width="24"
-            height="24"
+            width="16"
+            height="16"
             viewBox="0 0 24 24"
             fill="none"
-            stroke="white"
+            stroke="#ef4444"
             strokeWidth="2.5"
             strokeLinecap="round"
             strokeLinejoin="round">
@@ -54,11 +52,11 @@ const Sidebar = ({ isOpen, onToggle, onChangePassword }) => {
           </svg>
         ) : (
           <svg
-            width="24"
-            height="24"
+            width="16"
+            height="16"
             viewBox="0 0 24 24"
             fill="none"
-            stroke="white"
+            stroke="#10b981"
             strokeWidth="2.5"
             strokeLinecap="round"
             strokeLinejoin="round">
@@ -72,27 +70,30 @@ const Sidebar = ({ isOpen, onToggle, onChangePassword }) => {
       {/* Sidebar */}
       <aside
         style={{
-          width: isOpen ? "280px" : "0",
+          position: "fixed",
+          left: 0,
+          top: "72px",
+          width: isOpen ? "260px" : "0",
+          height: "calc(100vh - 72px)",
           background: "linear-gradient(180deg, #ffffff 0%, #f8fafc 100%)",
           borderRight: isOpen ? "1px solid #e2e8f0" : "none",
-          padding: isOpen ? "24px 0" : "0",
-          minHeight: "calc(100vh - 72px)",
+          padding: isOpen ? "24px 0 24px 56px" : "0",
           transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
           overflow: "hidden",
-          position: "relative",
           boxShadow: isOpen ? "2px 0 8px rgba(0, 0, 0, 0.05)" : "none",
+          zIndex: 999,
         }}>
         {/* Sidebar Content */}
         {isOpen && (
           <>
             {/* Sidebar Header */}
             <div style={{
-              padding: "0 20px 24px 20px",
+              padding: "0 20px 24px 0",
               borderBottom: "1px solid #e2e8f0",
               marginBottom: "16px",
             }}>
               <h3 style={{
-                fontSize: "14px",
+                fontSize: "13px",
                 fontWeight: "700",
                 color: "#64748b",
                 textTransform: "uppercase",
@@ -108,7 +109,7 @@ const Sidebar = ({ isOpen, onToggle, onChangePassword }) => {
               display: "flex",
               flexDirection: "column",
               gap: "4px",
-              padding: "0 12px",
+              padding: "0 12px 0 0",
             }}>
               <button
                 onClick={onChangePassword}
@@ -116,7 +117,7 @@ const Sidebar = ({ isOpen, onToggle, onChangePassword }) => {
                   display: "flex",
                   alignItems: "center",
                   gap: "14px",
-                  padding: "14px 16px",
+                  padding: "12px 16px",
                   background: "transparent",
                   border: "none",
                   borderRadius: "10px",
@@ -126,22 +127,22 @@ const Sidebar = ({ isOpen, onToggle, onChangePassword }) => {
                   color: "#475569",
                   transition: "all 0.2s ease",
                   textAlign: "left",
-                  position: "relative",
+                  width: "100%",
                 }}
                 onMouseEnter={(e) => {
-                  e.target.style.background = "linear-gradient(135deg, #f0fdf4, #dcfce7)";
-                  e.target.style.color = "#10b981";
-                  e.target.style.transform = "translateX(4px)";
+                  e.currentTarget.style.background = "linear-gradient(135deg, #f0fdf4, #dcfce7)";
+                  e.currentTarget.style.color = "#10b981";
+                  e.currentTarget.style.transform = "translateX(4px)";
                 }}
                 onMouseLeave={(e) => {
-                  e.target.style.background = "transparent";
-                  e.target.style.color = "#475569";
-                  e.target.style.transform = "translateX(0)";
+                  e.currentTarget.style.background = "transparent";
+                  e.currentTarget.style.color = "#475569";
+                  e.currentTarget.style.transform = "translateX(0)";
                 }}>
                 <div style={{
-                  width: "40px",
-                  height: "40px",
-                  borderRadius: "10px",
+                  width: "36px",
+                  height: "36px",
+                  borderRadius: "9px",
                   background: "linear-gradient(135deg, #f0fdf4, #dcfce7)",
                   display: "flex",
                   alignItems: "center",
@@ -149,8 +150,8 @@ const Sidebar = ({ isOpen, onToggle, onChangePassword }) => {
                   flexShrink: 0,
                 }}>
                   <svg
-                    width="20"
-                    height="20"
+                    width="18"
+                    height="18"
                     viewBox="0 0 24 24"
                     fill="none"
                     stroke="#10b981"
@@ -171,4 +172,3 @@ const Sidebar = ({ isOpen, onToggle, onChangePassword }) => {
 };
 
 export default Sidebar;
-

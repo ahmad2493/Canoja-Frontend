@@ -35,6 +35,7 @@ const DetailRow = ({ label, value }) => (
 const AdminVerificationDashboard = () => {
   const [selectedRequest, setSelectedRequest] = useState(null);
   const [showModal, setShowModal] = useState(false);
+  const [approvingId, setApprovingId] = useState(null);
 
   const [showRejectModal, setShowRejectModal] = useState(false);
 const [rejectReason, setRejectReason] = useState("");
@@ -45,12 +46,15 @@ const [requestToReject, setRequestToReject] = useState(null);
   const rejectMutation = useRejectVerificationRequest();
 
   const handleApprove = async (requestId) => {
+    setApprovingId(requestId);
     try {
       await approveMutation.mutateAsync(requestId);
       toast.success("Request approved successfully!");
       refetch();
     } catch (error) {
       toast.error(error.message || "Failed to approve request");
+    } finally {
+      setApprovingId(null);
     }
   };
 
@@ -276,7 +280,7 @@ const cancelReject = () => {
                         }}>
                           <button
                             onClick={() => handleApprove(request._id)}
-                            disabled={approveMutation.isPending}
+                            disabled={approvingId === request._id}
                             style={{
                               background: "linear-gradient(135deg, #10b981, #059669)",
                               color: "#ffffff",
@@ -285,16 +289,16 @@ const cancelReject = () => {
                               padding: "8px 16px",
                               fontWeight: "600",
                               fontSize: "14px",
-                              cursor: approveMutation.isPending ? "not-allowed" : "pointer",
+                              cursor: approvingId === request._id ? "not-allowed" : "pointer",
                               transition: "all 0.2s ease",
                               boxShadow: "0 2px 4px rgba(16, 185, 129, 0.2)",
-                              opacity: approveMutation.isPending ? 0.6 : 1,
+                              opacity: approvingId === request._id ? 0.6 : 1,
                             }}>
-                            {approveMutation.isPending ? "Approving..." : "✓ Approve"}
+                            {approvingId === request._id ? "Approving..." : "✓ Approve"}
                           </button>
                           <button
                             onClick={() => handleReject(request._id)}
-                            disabled={rejectMutation.isPending}
+                            disabled={requestToReject === request._id && rejectMutation.isPending}
                             style={{
                               background: "linear-gradient(135deg, #ef4444, #dc2626)",
                               color: "#ffffff",
@@ -303,12 +307,12 @@ const cancelReject = () => {
                               padding: "8px 16px",
                               fontWeight: "600",
                               fontSize: "14px",
-                              cursor: rejectMutation.isPending ? "not-allowed" : "pointer",
+                              cursor: requestToReject === request._id && rejectMutation.isPending ? "not-allowed" : "pointer",
                               transition: "all 0.2s ease",
                               boxShadow: "0 2px 4px rgba(239, 68, 68, 0.2)",
-                              opacity: rejectMutation.isPending ? 0.6 : 1,
+                              opacity: requestToReject === request._id && rejectMutation.isPending ? 0.6 : 1,
                             }}>
-                            {rejectMutation.isPending ? "Rejecting..." : "✕ Reject"}
+                            ✕ Reject
                           </button>
                           <button
                             onClick={() => handleViewDetails(request)}
@@ -410,6 +414,7 @@ const cancelReject = () => {
           justifyContent: "center",
           fontWeight: "bold",
           lineHeight: 1,
+          padding: 0,
           zIndex: 10,
         }}>
         ×
@@ -584,8 +589,7 @@ const cancelReject = () => {
             Request Details
           </h3>
           <DetailRow label="Status" value={selectedRequest.status} />
-          <DetailRow label="Pharmacy ID" value={selectedRequest.pharmacyId} />
-          <DetailRow 
+          <DetailRow
             label="Submitted" 
             value={new Date(selectedRequest.createdAt).toLocaleString()} 
           />
@@ -636,6 +640,11 @@ const cancelReject = () => {
           fontSize: 18,
           cursor: "pointer",
           color: "#64748b",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          lineHeight: 1,
+          padding: 0,
         }}>
         ×
       </button>

@@ -11,6 +11,11 @@ export const setToken = (token) => localStorage.setItem("jwt", token);
 export const getToken = () => localStorage.getItem("jwt");
 export const removeToken = () => localStorage.removeItem("jwt");
 
+// Refresh token helpers
+export const setRefreshToken = (token) => localStorage.setItem("refreshToken", token);
+export const getRefreshToken = () => localStorage.getItem("refreshToken");
+export const removeRefreshToken = () => localStorage.removeItem("refreshToken");
+
 // Create axios instance
 const api = axios.create({
   baseURL: apiBaseUrl,
@@ -34,13 +39,77 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
-// Response interceptor - handle common errors
+// Response interceptor - handle 401 with token refresh
+let isRefreshing = false;
+let failedQueue = [];
+
+const processQueue = (error, token = null) => {
+  failedQueue.forEach((prom) => {
+    if (error) {
+      prom.reject(error);
+    } else {
+      prom.resolve(token);
+    }
+  });
+  failedQueue = [];
+};
+
 api.interceptors.response.use(
   (response) => response,
-  (error) => {
-    if (error.response?.status === 401) {
-      console.warn('Authentication failed - token may be expired');
+  async (error) => {
+    const originalRequest = error.config;
+
+    // Skip refresh logic for login and refresh-token endpoints
+    if (
+      error.response?.status === 401 &&
+      !originalRequest._retry &&
+      !originalRequest.url?.includes("/users/login") &&
+      !originalRequest.url?.includes("/users/refresh-token")
+    ) {
+      if (isRefreshing) {
+        // Queue requests while refresh is in progress
+        return new Promise((resolve, reject) => {
+          failedQueue.push({ resolve, reject });
+        }).then((token) => {
+          originalRequest.headers.Authorization = `Bearer ${token}`;
+          return api(originalRequest);
+        });
+      }
+
+      originalRequest._retry = true;
+      isRefreshing = true;
+
+      const refreshToken = getRefreshToken();
+      if (!refreshToken) {
+        isRefreshing = false;
+        removeToken();
+        removeRefreshToken();
+        window.location.href = "/login";
+        return Promise.reject(error);
+      }
+
+      try {
+        const { data } = await axios.post(`${apiBaseUrl}/users/refresh-token`, {
+          refreshToken,
+        });
+
+        setToken(data.token);
+        setRefreshToken(data.refreshToken);
+        processQueue(null, data.token);
+
+        originalRequest.headers.Authorization = `Bearer ${data.token}`;
+        return api(originalRequest);
+      } catch (refreshError) {
+        processQueue(refreshError, null);
+        removeToken();
+        removeRefreshToken();
+        window.location.href = "/login";
+        return Promise.reject(refreshError);
+      } finally {
+        isRefreshing = false;
+      }
     }
+
     return Promise.reject(error);
   }
 );

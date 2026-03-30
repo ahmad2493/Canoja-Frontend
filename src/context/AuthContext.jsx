@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useEffect } from "react";
-import { getToken, removeToken, setToken } from "../services/admin";
+import { getToken, removeToken, setToken, setRefreshToken, removeRefreshToken } from "../services/admin";
 import { jwtDecode } from "jwt-decode";
 
 const AuthContext = createContext();
@@ -22,9 +22,11 @@ export function AuthProvider({ children }) {
 		setLoading(false);
 	}, []);
 
-	const login = (token, userData) => {
-		// console.log("Token", token);
+	const login = (token, userData, refreshToken) => {
 		setToken(token);
+		if (refreshToken) {
+			setRefreshToken(refreshToken);
+		}
 		setUser(userData);
 	};
 
@@ -34,6 +36,7 @@ export function AuthProvider({ children }) {
 
 	const logout = () => {
 		removeToken();
+		removeRefreshToken();
 		setUser(null);
 	};
 
