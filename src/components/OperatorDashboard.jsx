@@ -8,7 +8,6 @@ import {
   useUpdateBusinessProfile,
   useToggleBusinessVisibility,
   useUploadMenu,
-  useEngagementStats,
 } from "../services/business";
 
 const OperatorDashboard = () => {
@@ -22,8 +21,6 @@ const OperatorDashboard = () => {
   const { data: dashboardData, isLoading: dashboardLoading, error: dashboardError } = useBusinessDashboard();
   const { data: locationData, isLoading: locationLoading } = useBusinessLocation();
   const { data: profileData, isLoading: profileLoading } = useBusinessProfile();
-  const { data: engagementData } = useEngagementStats();
-  
   const updateProfileMutation = useUpdateBusinessProfile();
   const toggleVisibilityMutation = useToggleBusinessVisibility();
   const uploadMenuMutation = useUploadMenu();
@@ -230,7 +227,7 @@ const OperatorDashboard = () => {
               border: "1px solid #e5e7eb",
             }}>
               <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "12px" }}>
-                {getStatusIcon("verification", businessHealth?.verification?.status)}
+                {getStatusIcon("verification", "verified")}
                 <h3 style={{ fontSize: "14px", fontWeight: "600", color: "#374151", margin: 0 }}>
                   Verification
                 </h3>
@@ -238,10 +235,10 @@ const OperatorDashboard = () => {
               <p style={{
                 fontSize: "16px",
                 fontWeight: "600",
-                color: getStatusColor(businessHealth?.verification?.status),
+                color: getStatusColor("verified"),
                 margin: "4px 0 0 0",
               }}>
-                {businessHealth?.verification?.message || "Pending Review"}
+                Verified
               </p>
             </div>
 
@@ -270,7 +267,7 @@ const OperatorDashboard = () => {
                 {businessHealth?.visibility?.message || "Visible"}
               </p>
               <p style={{ fontSize: "12px", color: "#6b7280", margin: "4px 0 0 0" }}>
-                {businessHealth?.visibility?.status === "visible" ? "Not visible" : "Visible"}
+                Tap to change
               </p>
             </div>
 
@@ -296,7 +293,9 @@ const OperatorDashboard = () => {
                 {businessHealth?.menu_freshness?.message || "No menu"}
               </p>
               <p style={{ fontSize: "12px", color: "#6b7280", margin: "4px 0 0 0" }}>
-                {businessHealth?.menu_freshness?.status === "uploaded" ? "Menu uploaded" : "Upload a menu"}
+                {businessHealth?.menu_freshness?.uploaded_at
+                  ? `Last updated ${new Date(businessHealth.menu_freshness.uploaded_at).toLocaleString()}`
+                  : businessHealth?.menu_freshness?.status === "uploaded" ? "Menu uploaded" : "Upload a menu"}
               </p>
             </div>
 
@@ -319,10 +318,7 @@ const OperatorDashboard = () => {
                 color: "#1e293b",
                 margin: "4px 0 0 0",
               }}>
-                {businessHealth?.engagement?.count !== undefined ? businessHealth.engagement.count : engagementData?.data?.view_count || 0}
-              </p>
-              <p style={{ fontSize: "12px", color: "#6b7280", margin: "4px 0 0 0" }}>
-                {businessHealth?.engagement?.message || "Views this week"}
+                {businessHealth?.engagement?.count ?? 0} views
               </p>
             </div>
           </div>
@@ -560,40 +556,6 @@ const OperatorDashboard = () => {
           </div>
         </div>
 
-        {/* Verification in Progress Alert */}
-        {businessHealth?.verification?.status === "pending_review" && (
-          <div style={{
-            background: "linear-gradient(135deg, #10b981, #059669)",
-            borderRadius: "16px",
-            padding: "20px 24px",
-            color: "#ffffff",
-            display: "flex",
-            alignItems: "center",
-            gap: "16px",
-          }}>
-            <div style={{
-              width: "40px",
-              height: "40px",
-              borderRadius: "10px",
-              background: "rgba(255, 255, 255, 0.2)",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-            }}>
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-                <path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-            </div>
-            <div>
-              <h3 style={{ fontSize: "18px", fontWeight: "700", margin: "0 0 4px 0" }}>
-                Verification in Progress
-              </h3>
-              <p style={{ fontSize: "14px", margin: 0, opacity: 0.9 }}>
-                Your request is being reviewed. We'll notify you once approved.
-              </p>
-            </div>
-          </div>
-        )}
       </div>
 
       {/* Location Modal */}
