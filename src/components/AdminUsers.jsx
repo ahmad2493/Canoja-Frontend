@@ -90,7 +90,7 @@ const AdminUsers = () => {
               placeholder="Search by email..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              style={{ padding: "8px 14px", border: "1.5px solid #e2e8f0", borderRadius: "9px", fontSize: "14px", outline: "none", minWidth: "220px", fontFamily: "inherit" }}
+              style={{ padding: "8px 14px", border: "1.5px solid #e2e8f0", borderRadius: "9px", fontSize: "14px", outline: "none", minWidth: "220px", fontFamily: "inherit", background: "#ffffff", color: "#1e293b" }}
               onFocus={(e) => e.target.style.borderColor = "#10b981"}
               onBlur={(e) => e.target.style.borderColor = "#e2e8f0"}
             />

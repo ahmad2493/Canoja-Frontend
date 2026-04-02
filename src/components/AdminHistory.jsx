@@ -125,17 +125,17 @@ const AdminHistory = () => {
                           onMouseLeave={(e) => e.currentTarget.style.background = "transparent"}>
                           <td style={{ padding: "14px 20px", fontWeight: "600", color: "#1e293b" }}>{req.legal_business_name || "N/A"}</td>
                           <td style={{ padding: "14px 20px" }}>
-                            <span style={{ padding: "3px 10px", borderRadius: "6px", fontSize: "12px", fontWeight: "600", background: req.business_type === "cannabis_operator" ? "#f0fdf4" : "#fef9c3", color: req.business_type === "cannabis_operator" ? "#15803d" : "#854d0e" }}>
+                            <span style={{ padding: "3px 10px", borderRadius: "6px", fontSize: "12px", fontWeight: "600", whiteSpace: "nowrap", background: req.business_type === "cannabis_operator" ? "#f0fdf4" : "#fef9c3", color: req.business_type === "cannabis_operator" ? "#15803d" : "#854d0e" }}>
                               {req.business_type === "cannabis_operator" ? "Cannabis" : req.business_type === "smoke_shop" ? "Smoke Shop" : "—"}
                             </span>
                           </td>
                           <td style={{ padding: "14px 20px" }}>
-                            <span style={{ padding: "3px 10px", borderRadius: "6px", fontSize: "12px", fontWeight: "600", background: req.verification_method === "auto" ? "#ede9fe" : "#f1f5f9", color: req.verification_method === "auto" ? "#6d28d9" : "#475569" }}>
+                            <span style={{ padding: "3px 10px", borderRadius: "6px", fontSize: "12px", fontWeight: "600", whiteSpace: "nowrap", background: req.verification_method === "auto" ? "#ede9fe" : "#f1f5f9", color: req.verification_method === "auto" ? "#6d28d9" : "#475569" }}>
                               {req.verification_method === "auto" ? "Auto" : req.verification_method === "manual" ? "Manual" : "—"}
                             </span>
                           </td>
                           <td style={{ padding: "14px 20px" }}>
-                            <span style={{ padding: "3px 10px", borderRadius: "6px", fontSize: "12px", fontWeight: "600", background: style.bg, color: style.color }}>
+                            <span style={{ padding: "3px 10px", borderRadius: "6px", fontSize: "12px", fontWeight: "600", whiteSpace: "nowrap", background: style.bg, color: style.color }}>
                               {req.status === "auto_verified" ? "Auto Verified" : req.status ? req.status.charAt(0).toUpperCase() + req.status.slice(1) : "—"}
                             </span>
                           </td>
@@ -220,6 +220,14 @@ const AdminHistory = () => {
                   <DetailRow label="License Type" value={selectedRequest.license_information.license_type} />
                   <DetailRow label="Jurisdiction" value={selectedRequest.license_information.jurisdiction} />
                   <DetailRow label="Expiration Date" value={selectedRequest.license_information.expiration_date ? new Date(selectedRequest.license_information.expiration_date).toLocaleDateString() : null} />
+                </div>
+              )}
+              {(selectedRequest.uploaded_documents?.state_license_document || selectedRequest.uploaded_documents?.utility_bill || selectedRequest.contact_person?.government_issued_id_document) && (
+                <div style={{ marginBottom: 20 }}>
+                  <h3 style={{ fontSize: 14, fontWeight: 600, color: "#1e293b", marginBottom: 10, borderBottom: "2px solid #e2e8f0", paddingBottom: 6 }}>Documents</h3>
+                  {selectedRequest.uploaded_documents?.state_license_document && <DetailRow label="State License" value={<a href={selectedRequest.uploaded_documents.state_license_document} target="_blank" rel="noopener noreferrer" style={{ color: "#2563eb" }}>View</a>} />}
+                  {selectedRequest.uploaded_documents?.utility_bill && <DetailRow label="Utility Bill" value={<a href={selectedRequest.uploaded_documents.utility_bill} target="_blank" rel="noopener noreferrer" style={{ color: "#2563eb" }}>View</a>} />}
+                  {selectedRequest.contact_person?.government_issued_id_document && <DetailRow label="Government ID" value={<a href={selectedRequest.contact_person.government_issued_id_document} target="_blank" rel="noopener noreferrer" style={{ color: "#2563eb" }}>View</a>} />}
                 </div>
               )}
               <div>
