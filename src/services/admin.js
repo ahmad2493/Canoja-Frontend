@@ -10,7 +10,7 @@ const adminLogin = async (credentials) => {
     const response = await api.post("/users/login", credentials);
     return response.data;
   } catch (error) {
-    throw new Error(error.response?.data?.message || "Login failed");
+    throw new Error(error.response?.data?.error || error.response?.data?.message || "Login failed");
   }
 };
 
@@ -39,9 +39,10 @@ export const useAllUsers = () => {
 };
 
 // Pending Verification Requests
-export const fetchPendingVerificationRequests = async () => {
+export const fetchPendingVerificationRequests = async (businessType = "") => {
   try {
-    const response = await api.get("/verification-requests/admin/pending");
+    const params = businessType ? { business_type: businessType } : {};
+    const response = await api.get("/verification-requests/admin/pending", { params });
     return response.data;
   } catch (error) {
     console.error("Error fetching pending requests:", error);
@@ -49,11 +50,49 @@ export const fetchPendingVerificationRequests = async () => {
   }
 };
 
-export const usePendingVerificationRequests = () => {
+export const usePendingVerificationRequests = (businessType = "") => {
   return useQuery({
-    queryKey: ["pendingVerificationRequests"],
-    queryFn: fetchPendingVerificationRequests,
-    refetchInterval: 30000, // Refetch every 30 seconds
+    queryKey: ["pendingVerificationRequests", businessType],
+    queryFn: () => fetchPendingVerificationRequests(businessType),
+    refetchInterval: 30000,
+  });
+};
+
+// Verification History
+export const fetchVerificationHistory = async ({ status = "", businessType = "", page = 1, limit = 50 } = {}) => {
+  try {
+    const params = { page, limit };
+    if (status) params.status = status;
+    if (businessType) params.business_type = businessType;
+    const response = await api.get("/admin/verification-history", { params });
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching verification history:", error);
+    throw new Error(error.response?.data?.message || "Failed to fetch verification history");
+  }
+};
+
+export const useVerificationHistory = ({ status = "", businessType = "", page = 1, limit = 50 } = {}) => {
+  return useQuery({
+    queryKey: ["verificationHistory", status, businessType, page, limit],
+    queryFn: () => fetchVerificationHistory({ status, businessType, page, limit }),
+  });
+};
+
+// Toggle User Active Status
+export const toggleUserStatus = async (userId) => {
+  try {
+    const response = await api.patch(`/admin/users/${userId}/toggle-status`);
+    return response.data;
+  } catch (error) {
+    console.error("Error toggling user status:", error);
+    throw new Error(error.response?.data?.error || "Failed to update user status");
+  }
+};
+
+export const useToggleUserStatus = () => {
+  return useMutation({
+    mutationFn: toggleUserStatus,
   });
 };
 

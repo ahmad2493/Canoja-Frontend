@@ -3,7 +3,7 @@ import canojaLogo from "../assets/canojaLogo.png";
 import { useAdminLogin } from "../services/admin";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, Link, useSearchParams } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import ForcedPasswordChange from "./ForcedPasswordChange";
 
@@ -14,8 +14,15 @@ const Login = () => {
 	const [showPassword, setShowPassword] = useState(false);
 	const [needsPasswordChange, setNeedsPasswordChange] = useState(false);
 	const navigate = useNavigate();
+	const [searchParams] = useSearchParams();
 	const { login, isAuthenticated, user } = useAuth();
 	const loginMutation = useAdminLogin();
+
+	useEffect(() => {
+		if (searchParams.get("reason") === "deactivated") {
+			toast.error("Your account has been deactivated.");
+		}
+	}, []);
 
 	// Redirect based on role if already authenticated (but not if password change is required)
 	useEffect(() => {

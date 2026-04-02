@@ -3,7 +3,7 @@ import { useMutation } from "@tanstack/react-query";
 import { jwtDecode } from "jwt-decode";
 
 // Environment configuration
-// const apiBaseUrl = "http://localhost:5000/api";
+//const apiBaseUrl = "http://localhost:5000/api";
 const apiBaseUrl = "http://54.227.140.191/api";
 
 // Token helpers
@@ -58,6 +58,17 @@ api.interceptors.response.use(
   (response) => response,
   async (error) => {
     const originalRequest = error.config;
+
+    // Handle deactivated account — force logout immediately
+    if (
+      error.response?.status === 403 &&
+      error.response?.data?.code === "ACCOUNT_DEACTIVATED"
+    ) {
+      removeToken();
+      removeRefreshToken();
+      window.location.href = "/login?reason=deactivated";
+      return Promise.reject(error);
+    }
 
     // Skip refresh logic for login and refresh-token endpoints
     if (

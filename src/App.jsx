@@ -3,6 +3,9 @@ import { Routes, Route, Navigate } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import Login from "./components/Login";
 import AdminVerificationDashboard from "./components/AdminVerificationDashboard";
+import AdminVerificationRequests from "./components/AdminVerificationRequests";
+import AdminHistory from "./components/AdminHistory";
+import AdminUsers from "./components/AdminUsers";
 import OperatorDashboard from "./components/OperatorDashboard";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import { ToastContainer } from "react-toastify";
@@ -65,14 +68,19 @@ function App() {
               element={<ClaimBusinessForm />} 
             />
 
-            {/* Admin Dashboard - Protected */}
-            <Route 
-              path="/admin/dashboard" 
-              element={
-                <ProtectedRoute>
-                  <AdminVerificationDashboard />
-                </ProtectedRoute>
-              } 
+            {/* Admin Routes - Protected */}
+            <Route path="/admin/dashboard" element={<Navigate to="/admin/verification-requests" replace />} />
+            <Route
+              path="/admin/verification-requests"
+              element={<ProtectedRoute><AdminVerificationRequests /></ProtectedRoute>}
+            />
+            <Route
+              path="/admin/history"
+              element={<ProtectedRoute><AdminHistory /></ProtectedRoute>}
+            />
+            <Route
+              path="/admin/users"
+              element={<ProtectedRoute><AdminUsers /></ProtectedRoute>}
             />
 
             {/* Operator Dashboard - Protected */}
