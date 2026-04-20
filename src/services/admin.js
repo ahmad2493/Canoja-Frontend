@@ -132,6 +132,148 @@ export const useRejectVerificationRequest = () => {
   });
 };
 
+// Compare Shops (public shop search with rich filters)
+export const useCompareShops = (body = {}, options = {}) =>
+  useQuery({
+    queryKey: ["compareShops", body],
+    queryFn: async () => {
+      const response = await api.post("/shops/compare-shops", body);
+      return response.data;
+    },
+    ...options,
+  });
+
+// ─── Phase 3–6 hooks ─────────────────────────────────────────────────────────
+
+export const useAdminRetailers = (params = {}) =>
+  useQuery({
+    queryKey: ["adminRetailers", params],
+    queryFn: async () => {
+      const response = await api.get("/admin/retailers", { params });
+      return response.data;
+    },
+    refetchInterval: 60000,
+  });
+
+export const useCreateRetailer = () =>
+  useMutation({
+    mutationFn: async (data) => {
+      const response = await api.post("/admin/retailers", data);
+      return response.data;
+    },
+  });
+
+export const useEscalatePendingVerification = () =>
+  useMutation({
+    mutationFn: async ({ id, note }) => {
+      const response = await api.patch(`/admin/pending-verifications/${id}/escalate`, { note });
+      return response.data;
+    },
+  });
+
+export const useAdminCanojaVerified = (params = {}) =>
+  useQuery({
+    queryKey: ["adminCanojaVerified", params],
+    queryFn: async () => {
+      const response = await api.get("/admin/canoja-verified", { params });
+      return response.data;
+    },
+    refetchInterval: 60000,
+  });
+
+export const useIssueVerification = () =>
+  useMutation({
+    mutationFn: async ({ id, expiration_date }) => {
+      const response = await api.post("/admin/canoja-verified/issue", { id, expiration_date });
+      return response.data;
+    },
+  });
+
+export const useRevokeVerifiedBadge = () =>
+  useMutation({
+    mutationFn: async (id) => {
+      const response = await api.patch(`/admin/canoja-verified/${id}/revoke`);
+      return response.data;
+    },
+  });
+
+export const useRenewVerifiedBadge = () =>
+  useMutation({
+    mutationFn: async ({ id, expiration_date }) => {
+      const response = await api.patch(`/admin/canoja-verified/${id}/renew`, { expiration_date });
+      return response.data;
+    },
+  });
+
+export const useRequestMessages = (requestId) =>
+  useQuery({
+    queryKey: ["requestMessages", requestId],
+    queryFn: async () => {
+      const response = await api.get(`/admin/requests/${requestId}/messages`);
+      return response.data;
+    },
+    enabled: !!requestId,
+  });
+
+export const useSendRequestMessage = () =>
+  useMutation({
+    mutationFn: async ({ requestId, body }) => {
+      const response = await api.post(`/admin/requests/${requestId}/messages`, { body });
+      return response.data;
+    },
+  });
+
+export const useAdminPendingVerifications = (params = {}) =>
+  useQuery({
+    queryKey: ["adminPendingVerifications", params],
+    queryFn: async () => {
+      const response = await api.get("/admin/pending-verifications", { params });
+      return response.data;
+    },
+    refetchInterval: 30000,
+  });
+
+export const useAdminPendingRequests = (params = {}) =>
+  useQuery({
+    queryKey: ["adminPendingRequests", params],
+    queryFn: async () => {
+      const response = await api.get("/admin/pending-requests", { params });
+      return response.data;
+    },
+    refetchInterval: 30000,
+  });
+
+export const useCreatePendingRequest = () =>
+  useMutation({
+    mutationFn: async (data) => {
+      const response = await api.post("/admin/pending-requests", data);
+      return response.data;
+    },
+  });
+
+
+export const useAdminAuditLog = (params = {}) =>
+  useQuery({
+    queryKey: ["adminAuditLog", params],
+    queryFn: async () => {
+      const response = await api.get("/admin/audit-log", { params });
+      return response.data;
+    },
+    enabled: !!(params.targetId || params.targetType || params.actorId),
+  });
+
+export const useRecentAuditLog = (params = {}) =>
+  useQuery({
+    queryKey: ["recentAuditLog", params],
+    queryFn: async () => {
+      const response = await api.get("/admin/audit-log", { params });
+      return response.data;
+    },
+    refetchInterval: 60000,
+  });
+
+// ─────────────────────────────────────────────────────────────────────────────
+
 // Change Password
 export const changePassword = async (passwordData) => {
   try {

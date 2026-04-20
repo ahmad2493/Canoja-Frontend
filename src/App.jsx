@@ -10,10 +10,15 @@ import OperatorDashboard from "./components/OperatorDashboard";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import ShopFinder from "./components/ShopFinder"; 
+import ShopFinder from "./components/ShopFinder";
 import ClaimBusinessForm from "./components/ClaimBusinessForm";
 import ForgotPassword from "./components/ForgotPassword";
-import VerifyOTP from "./components/VerifyOTP"; 
+import VerifyOTP from "./components/VerifyOTP";
+import AdminRetailers from "./components/admin/AdminRetailers";
+import AdminPendingVerifications from "./components/admin/AdminPendingVerifications";
+import AdminPendingRequests from "./components/admin/AdminPendingRequests";
+import AdminCanojaVerified from "./components/admin/AdminCanojaVerified";
+import AdminVerifiedPharmacies from "./components/admin/AdminVerifiedPharmacies";
 
 // Create QueryClient with sensible defaults
 const queryClient = new QueryClient({
@@ -54,14 +59,6 @@ function App() {
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/verify-otp" element={<VerifyOTP />} />
 
-            {/* Shop Finder*/}
-            <Route 
-              path="/shop-finder" 
-              element={        
-                  <ShopFinder />     
-              } 
-            />
-
             {/* Claim Business Form - Public */}
             <Route 
               path="/claim-business" 
@@ -69,18 +66,30 @@ function App() {
             />
 
             {/* Admin Routes - Protected */}
-            <Route path="/admin/dashboard" element={<Navigate to="/admin/verification-requests" replace />} />
+            <Route path="/admin/dashboard" element={<Navigate to="/admin/retailers" replace />} />
+            <Route
+              path="/admin/retailers"
+              element={<ProtectedRoute><AdminRetailers /></ProtectedRoute>}
+            />
+            <Route
+              path="/admin/pending-verifications"
+              element={<ProtectedRoute><AdminPendingVerifications /></ProtectedRoute>}
+            />
+            <Route
+              path="/admin/pending-requests"
+              element={<ProtectedRoute><AdminPendingRequests /></ProtectedRoute>}
+            />
+            <Route
+              path="/admin/canoja-verified"
+              element={<ProtectedRoute><AdminCanojaVerified /></ProtectedRoute>}
+            />
+            <Route
+              path="/admin/verified-pharmacies"
+              element={<ProtectedRoute><AdminVerifiedPharmacies /></ProtectedRoute>}
+            />
             <Route
               path="/admin/verification-requests"
               element={<ProtectedRoute><AdminVerificationRequests /></ProtectedRoute>}
-            />
-            <Route
-              path="/admin/history"
-              element={<ProtectedRoute><AdminHistory /></ProtectedRoute>}
-            />
-            <Route
-              path="/admin/users"
-              element={<ProtectedRoute><AdminUsers /></ProtectedRoute>}
             />
 
             {/* Operator Dashboard - Protected */}
