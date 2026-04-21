@@ -3,8 +3,8 @@ import { useMutation } from "@tanstack/react-query";
 import { jwtDecode } from "jwt-decode";
 
 // Environment configuration
-const apiBaseUrl = "http://localhost:5000/api";
-// const apiBaseUrl = "http://54.227.140.191/api";
+// const apiBaseUrl = "http://localhost:5000/api";
+const apiBaseUrl = "http://54.227.140.191/api";
 
 // Token helpers
 export const setToken = (token) => localStorage.setItem("jwt", token);

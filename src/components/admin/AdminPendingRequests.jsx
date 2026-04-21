@@ -97,6 +97,16 @@ function timeAgo(date) {
   return `${d}d ago`;
 }
 
+const US_STATES = ["AL","AK","AZ","AR","CA","CO","CT","DE","FL","GA","HI","ID","IL","IN","IA","KS","KY","LA","ME","MD","MA","MI","MN","MS","MO","MT","NE","NV","NH","NJ","NM","NY","NC","ND","OH","OK","OR","PA","RI","SC","SD","TN","TX","UT","VT","VA","WA","WV","WI","WY","DC"];
+const STATE_NAMES = { AL:"Alabama",AK:"Alaska",AZ:"Arizona",AR:"Arkansas",CA:"California",CO:"Colorado",CT:"Connecticut",DE:"Delaware",FL:"Florida",GA:"Georgia",HI:"Hawaii",ID:"Idaho",IL:"Illinois",IN:"Indiana",IA:"Iowa",KS:"Kansas",KY:"Kentucky",LA:"Louisiana",ME:"Maine",MD:"Maryland",MA:"Massachusetts",MI:"Michigan",MN:"Minnesota",MS:"Mississippi",MO:"Missouri",MT:"Montana",NE:"Nebraska",NV:"Nevada",NH:"New Hampshire",NJ:"New Jersey",NM:"New Mexico",NY:"New York",NC:"North Carolina",ND:"North Dakota",OH:"Ohio",OK:"Oklahoma",OR:"Oregon",PA:"Pennsylvania",RI:"Rhode Island",SC:"South Carolina",SD:"South Dakota",TN:"Tennessee",TX:"Texas",UT:"Utah",VT:"Vermont",VA:"Virginia",WA:"Washington",WV:"West Virginia",WI:"Wisconsin",WY:"Wyoming",DC:"District of Columbia" };
+
+function extractState(address) {
+  if (!address) return "";
+  const m = address.match(/\b([A-Z]{2})\b(?:\s+\d{5})?/);
+  if (m && US_STATES.includes(m[1])) return m[1];
+  return "";
+}
+
 function mapRequest(r) {
   const completeness = computeCompleteness(r);
   return {
@@ -109,6 +119,7 @@ function mapRequest(r) {
     method:        r.verification_method,
     duplicateFlag: r.duplicateFlag || false,
     completeness,
+    market:        extractState(r.physical_address),
     leadSource:    r.leadSource || "Website CTA",
   };
 }
@@ -425,6 +436,7 @@ function NewRequestModal({ onClose, onSuccess }) {
     height: "38px", padding: "0 12px", borderRadius: "10px",
     border: `0.8px solid ${errors[key] ? "#d64545" : "#dce7e1"}`,
     fontSize: "13px", fontFamily: "inherit", outline: "none",
+    color: "#18212b", background: "#fff",
   });
 
   return (
@@ -443,21 +455,7 @@ function NewRequestModal({ onClose, onSuccess }) {
         {/* Body */}
         <div style={{ flex: 1, overflowY: "auto", padding: "24px 28px", display: "flex", flexDirection: "column", gap: "24px" }}>
 
-          {/* Request type */}
-          <div>
-            <label style={{ display: "block", fontSize: "12px", fontWeight: 700, color: "#617182", textTransform: "uppercase", letterSpacing: "0.6px", marginBottom: "8px" }}>Request Type <span style={{ color: "#d64545" }}>*</span></label>
-            <div style={{ display: "flex", gap: "10px" }}>
-              {[["claim", "Claim Business"], ["verify", "Verify Business"]].map(([v, l]) => (
-                <button
-                  key={v}
-                  onClick={() => set("requestType")(v)}
-                  style={{ flex: 1, height: "40px", borderRadius: "10px", background: form.requestType === v ? "linear-gradient(170deg,#1b6b46,#2da96d)" : "#fff", border: form.requestType === v ? "none" : "0.8px solid #dce7e1", color: form.requestType === v ? "#fff" : "#18212b", fontSize: "13px", fontWeight: 700, cursor: "pointer" }}
-                >
-                  {l}
-                </button>
-              ))}
-            </div>
-          </div>
+          {/* Request type — defaulted to claim, removed from UI */}
 
           {/* Business info */}
           <div>
@@ -481,7 +479,7 @@ function NewRequestModal({ onClose, onSuccess }) {
               </div>
               <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
                 <label style={{ fontSize: "12px", fontWeight: 700, color: "#617182", textTransform: "uppercase", letterSpacing: "0.6px" }}>Business Type</label>
-                <select value={form.business_type} onChange={e => set("business_type")(e.target.value)} style={{ height: "38px", padding: "0 12px", borderRadius: "10px", border: "0.8px solid #dce7e1", fontSize: "13px", fontFamily: "inherit", outline: "none", background: "#fff" }}>
+                <select value={form.business_type} onChange={e => set("business_type")(e.target.value)} style={{ height: "38px", padding: "0 12px", borderRadius: "10px", border: "0.8px solid #dce7e1", fontSize: "13px", fontFamily: "inherit", outline: "none", background: "#fff", color: "#18212b" }}>
                   <option value="">— Select —</option>
                   <option value="smoke_shop">Smoke Shop</option>
                   <option value="cannabis_operator">Cannabis Operator</option>
@@ -585,6 +583,8 @@ export default function AdminPendingRequests() {
   const [apiParams, setApiParams]   = useState({ limit: 50, page: 1 });
   const [typeFilter, setTypeFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
+  const [marketFilter, setMarketFilter] = useState("");
+  const [scoreFilter, setScoreFilter]   = useState("");
 
   const [drawerRecord, setDrawerRecord]   = useState(null);
   const [rejectTarget, setRejectTarget]   = useState(null);
@@ -611,15 +611,23 @@ export default function AdminPendingRequests() {
   const { data: apiData, isLoading, isError } = useAdminPendingRequests(apiParams);
 
   const rawRecords = apiData?.data || [];
-  const records    = rawRecords.map(mapRequest);
+  const allMapped    = rawRecords.map(mapRequest);
+  const stateOptions = apiData?.facets?.states || [];
+  const records = allMapped;
   const pagination = apiData?.pagination || {};
   const apiStats   = apiData?.stats || {};
 
+  const approved    = apiStats.approvedCount     ?? 0;
+  const rejected    = apiStats.rejectedCount     ?? 0;
+  const autoVerif   = apiStats.autoVerifiedCount ?? 0;
+  const decided     = approved + rejected + autoVerif;
+  const conversionRate = decided > 0 ? Math.round(((approved + autoVerif) / decided) * 100) : null;
+
   const STATS = [
-    { label: "Open Requests",     value: (apiStats.openRequests     ?? "—").toString(), delta: "Across all request types", deltaBg: "#edf5ff", deltaColor: "#2f80ed" },
-    { label: "Claim Business",    value: (apiStats.claimBusiness    ?? "—").toString(), delta: "Highest intent",            deltaBg: "#edf9f2", deltaColor: "#1f9d61" },
-    { label: "Duplicate Signals", value: (apiStats.duplicateSignals ?? "—").toString(), delta: "Review before approval",    deltaBg: "#fff5eb", deltaColor: "#d9822b" },
-    { label: "Conversion Rate",   value: "—",                                            delta: "Request → Verified",        deltaBg: "#edf9f2", deltaColor: "#1f9d61" },
+    { label: "Open Requests",     value: (apiStats.openRequests     ?? "—").toString(),       delta: "Across all request types", deltaBg: "#edf5ff", deltaColor: "#2f80ed" },
+    { label: "Claim Business",    value: (apiStats.claimBusiness    ?? "—").toString(),       delta: "Highest intent",            deltaBg: "#edf9f2", deltaColor: "#1f9d61" },
+    { label: "Duplicate Signals", value: (apiStats.duplicateSignals ?? "—").toString(),       delta: "Review before approval",    deltaBg: "#fff5eb", deltaColor: "#d9822b" },
+    { label: "Conversion Rate",   value: conversionRate !== null ? `${conversionRate}%` : "—", delta: "Verified / Decided",        deltaBg: "#edf9f2", deltaColor: "#1f9d61" },
   ];
 
   const handleTypeFilter = (val) => {
@@ -643,7 +651,7 @@ export default function AdminPendingRequests() {
   };
 
   const handleReset = () => {
-    setSearch(""); setTypeFilter(""); setStatusFilter("");
+    setSearch(""); setTypeFilter(""); setStatusFilter(""); setMarketFilter(""); setScoreFilter("");
     setApiParams({ limit: 50, page: 1 });
   };
 
@@ -726,9 +734,9 @@ export default function AdminPendingRequests() {
         <div style={{ display: "flex", gap: "8px" }} onClick={e => e.stopPropagation()}>
           <button
             onClick={() => setDrawerRecord(rawRecords.find(r => r._id === row.key))}
-            style={{ height: "34px", padding: "0 14px", borderRadius: "10px", background: row.status === "pending" ? "linear-gradient(170deg,#1b6b46,#2da96d)" : "#fff", border: row.status === "pending" ? "none" : "0.8px solid #dce7e1", color: row.status === "pending" ? "#fff" : C.textPrimary, fontSize: "12.5px", fontWeight: 700, cursor: "pointer" }}
+            style={{ height: "34px", padding: "0 14px", borderRadius: "10px", background: "#fff", border: "0.8px solid #dce7e1", color: C.textPrimary, fontSize: "12.5px", fontWeight: 700, cursor: "pointer" }}
           >
-            {row.status === "pending" ? "Open" : "View"}
+            View
           </button>
         </div>
       ),
@@ -769,31 +777,11 @@ export default function AdminPendingRequests() {
         {/* Body */}
         <div style={{ padding: "24px", display: "flex", flexDirection: "column", gap: "24px" }}>
 
-          {/* Hero */}
+          {/* Hero — commented out
           <div style={{ display: "grid", gridTemplateColumns: "1.5fr 1fr", gap: "18px" }}>
-            <div style={{ borderRadius: "24px", border: "0.8px solid #dce7e1", backgroundImage: "linear-gradient(155.79deg,rgba(100,149,237,0.11) 0%,rgba(255,255,255,0.95) 100%)", padding: "24px" }}>
-              <LayerBadge>Layer 1 · Intake + Conversion</LayerBadge>
-              <h3 style={{ fontSize: "20.8px", fontWeight: 800, color: C.textPrimary, marginTop: "24px", marginBottom: 0 }}>Structured Claim & Listing Requests</h3>
-              <p style={{ fontSize: "16px", color: C.textSecondary, marginTop: "14px", maxWidth: "604px" }}>
-                Review claim requests and new listings before they enter the verification pipeline. Approve or reject with a reason.
-              </p>
-              <div style={{ display: "flex", flexWrap: "wrap", gap: "10px", marginTop: "24px" }}>
-                {["Claim Business", "Verify Business", "Document Review"].map(c => <Chip key={c}>{c}</Chip>)}
-              </div>
-            </div>
-            <div style={{ borderRadius: "24px", border: "0.8px solid #dce7e1", background: "#fff", padding: "24px" }}>
-              <LayerBadge muted>Layer 2 · Funnel Health</LayerBadge>
-              <h3 style={{ fontSize: "20.8px", fontWeight: 800, color: C.textPrimary, marginTop: "24px", marginBottom: 0 }}>Operator Conversion View</h3>
-              <p style={{ fontSize: "16px", color: C.textSecondary, marginTop: "14px" }}>
-                Trace the path from request submitted to approved to marketplace-ready operator.
-              </p>
-              <div style={{ display: "flex", flexWrap: "wrap", gap: "10px", marginTop: "24px" }}>
-                <Chip>{apiStats.newTodayCount ?? "—"} New Today</Chip>
-                <Chip>{apiStats.duplicateSignals ?? "—"} Duplicates Suspected</Chip>
-                <Chip>{apiStats.convertedThisWeekCount ?? "—"} Converted This Week</Chip>
-              </div>
-            </div>
-          </div>
+            <div ...>Layer 1 · Structured Claim & Listing Requests</div>
+            <div ...>Layer 2 · Operator Conversion View</div>
+          </div> */}
 
           {/* Stat cards */}
           <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "18px" }}>
@@ -816,8 +804,8 @@ export default function AdminPendingRequests() {
                 <div>
                   <label style={{ display: "block", fontSize: "13.76px", fontWeight: 800, color: C.textPrimary, marginBottom: "8px" }}>Request Type</label>
                   <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-                    <FilterRow label="Claim Business"  count={apiStats.claimBusiness  ?? "—"} active={typeFilter === "claim"}  onClick={() => handleTypeFilter("claim")} />
-                    <FilterRow label="Verify Business" count={apiStats.verifyBusiness  ?? "—"} active={typeFilter === "verify"} onClick={() => handleTypeFilter("verify")} />
+                    <FilterRow label="Claim Business" count={apiStats.claimBusiness ?? "—"} active={typeFilter === "claim"} onClick={() => handleTypeFilter("claim")} />
+                    {/* <FilterRow label="Verify Business" count={apiStats.verifyBusiness ?? "—"} active={typeFilter === "verify"} onClick={() => handleTypeFilter("verify")} /> */}
                   </div>
                 </div>
 
@@ -836,6 +824,48 @@ export default function AdminPendingRequests() {
                   </div>
                 </div>
 
+                {/* Market Priority */}
+                <div>
+                  <label style={{ display: "block", fontSize: "13.76px", fontWeight: 800, color: C.textPrimary, marginBottom: "8px" }}>Market Priority</label>
+                  <select
+                    value={marketFilter}
+                    onChange={e => {
+                      const val = e.target.value;
+                      setMarketFilter(val);
+                      setApiParams(p => { const u = { ...p, page: 1 }; if (val) u.market = val; else delete u.market; return u; });
+                    }}
+                    style={{ width: "100%", height: "42px", padding: "0 12px", borderRadius: "12px", border: "0.8px solid #dce7e1", background: "#fff", fontSize: "14.72px", color: C.textPrimary, outline: "none", cursor: "pointer", boxSizing: "border-box" }}
+                  >
+                    <option value="">All Markets</option>
+                    {stateOptions.map(s => <option key={s._id} value={s._id}>{STATE_NAMES[s._id] || s._id} ({s.count})</option>)}
+                  </select>
+                </div>
+
+                {/* Completeness Score */}
+                <div>
+                  <label style={{ display: "block", fontSize: "13.76px", fontWeight: 800, color: C.textPrimary, marginBottom: "8px" }}>Completeness Score</label>
+                  <select
+                    value={scoreFilter}
+                    onChange={e => {
+                      const val = e.target.value;
+                      setScoreFilter(val);
+                      setApiParams(p => {
+                        const u = { ...p, page: 1 };
+                        if (val) { const [min, max] = val.split("-"); u.minScore = min; u.maxScore = max; }
+                        else { delete u.minScore; delete u.maxScore; }
+                        return u;
+                      });
+                    }}
+                    style={{ width: "100%", height: "42px", padding: "0 12px", borderRadius: "12px", border: "0.8px solid #dce7e1", background: "#fff", fontSize: "14.72px", color: C.textPrimary, outline: "none", cursor: "pointer", boxSizing: "border-box" }}
+                  >
+                    <option value="">Any Score</option>
+                    <option value="0-25">0–25%</option>
+                    <option value="26-50">26–50%</option>
+                    <option value="51-75">51–75%</option>
+                    <option value="76-100">76–100%</option>
+                  </select>
+                </div>
+
               </div>
             </div>
 
@@ -849,12 +879,12 @@ export default function AdminPendingRequests() {
                   </div>
                   <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
                     {selectedRowKeys.length > 0 && <span style={{ fontSize: "13px", color: C.textSecondary }}>{selectedRowKeys.length} selected</span>}
-                    <button
+                    {/* <button
                       onClick={() => { if (drawerRecord) setDrawerRecord(drawerRecord); else if (selectedRowKeys.length) setDrawerRecord(rawRecords.find(r => r._id === selectedRowKeys[0])); }}
                       style={{ height: "42px", padding: "0 16px", borderRadius: "12px", background: "#fff", border: "0.8px solid #dce7e1", color: C.textPrimary, fontSize: "13.333px", fontWeight: 700, cursor: "pointer" }}
                     >
                       Message Operator
-                    </button>
+                    </button> */}
                     <button
                       onClick={() => selectedRowKeys.length && handleApprove(selectedRowKeys[0])}
                       disabled={!selectedRowKeys.length}
@@ -873,6 +903,7 @@ export default function AdminPendingRequests() {
                     columns={columns}
                     size="middle"
                     loading={isLoading}
+                    scroll={{ x: "max-content" }}
                     style={{ fontFamily: "Inter, sans-serif" }}
                     locale={{ emptyText: isLoading ? "Loading…" : "No requests found" }}
                     rowSelection={{ selectedRowKeys, onChange: keys => setSelectedRowKeys(keys) }}

@@ -246,7 +246,11 @@ export const useAdminPendingRequests = (params = {}) =>
 export const useCreatePendingRequest = () =>
   useMutation({
     mutationFn: async (data) => {
-      const response = await api.post("/admin/pending-requests", data);
+      const response = await api.post("/verification-requests/claim", {
+        ...data,
+        claimRequested: true,
+        ownership_attestation: true,
+      });
       return response.data;
     },
   });

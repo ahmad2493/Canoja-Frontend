@@ -107,7 +107,7 @@ function RenewModal({ record, onClose, onConfirm, loading }) {
           type="date"
           value={expDate}
           onChange={e => setExpDate(e.target.value)}
-          style={{ width: "100%", height: "40px", padding: "0 12px", borderRadius: "10px", border: "0.8px solid #dce7e1", fontSize: "14px", fontFamily: "inherit", outline: "none", boxSizing: "border-box" }}
+          style={{ width: "100%", height: "40px", padding: "0 12px", borderRadius: "10px", border: "0.8px solid #dce7e1", fontSize: "14px", fontFamily: "inherit", outline: "none", boxSizing: "border-box", color: "#18212b", background: "#fff" }}
         />
         <div style={{ display: "flex", gap: "10px", justifyContent: "flex-end", marginTop: "20px" }}>
           <button onClick={onClose} style={{ height: "40px", padding: "0 20px", borderRadius: "10px", background: "#fff", border: "0.8px solid #dce7e1", color: C.textPrimary, fontSize: "13px", fontWeight: 700, cursor: "pointer" }}>Cancel</button>
@@ -222,7 +222,7 @@ function VerifiedDrawer({ record, rawRecord, onClose, onRevoke, onRenew, revokin
           </div>
 
           {/* Badge lifecycle */}
-          {lifecycle.length > 0 && (
+          {false && lifecycle.length > 0 && (
             <div>
               <p style={{ fontSize: "13px", fontWeight: 800, color: C.textPrimary, textTransform: "uppercase", letterSpacing: "1px", marginBottom: "12px" }}>Badge Lifecycle</p>
               <div style={{ display: "flex", flexDirection: "column" }}>
@@ -247,7 +247,7 @@ function VerifiedDrawer({ record, rawRecord, onClose, onRevoke, onRenew, revokin
           )}
 
           {/* Audit trail */}
-          {auditLogs.length > 0 && (
+          {false && auditLogs.length > 0 && (
             <div>
               <p style={{ fontSize: "13px", fontWeight: 800, color: C.textPrimary, textTransform: "uppercase", letterSpacing: "1px", marginBottom: "12px" }}>Audit Trail</p>
               <div style={{ display: "flex", flexDirection: "column" }}>
@@ -369,7 +369,7 @@ function IssueVerificationModal({ onClose, onSuccess }) {
               type="date"
               value={expDate}
               onChange={e => setExpDate(e.target.value)}
-              style={{ height: "40px", padding: "0 12px", borderRadius: "10px", border: "0.8px solid #dce7e1", fontSize: "13px", fontFamily: "inherit", outline: "none" }}
+              style={{ height: "40px", padding: "0 12px", borderRadius: "10px", border: "0.8px solid #dce7e1", fontSize: "13px", fontFamily: "inherit", outline: "none", color: "#18212b", background: "#fff" }}
             />
           </div>
         </div>
@@ -688,8 +688,8 @@ export default function AdminCanojaVerified() {
         {/* Body */}
         <div style={{ padding: "24px", display: "flex", flexDirection: "column", gap: "24px" }}>
 
-          {/* Hero */}
-          <div style={{ display: "grid", gridTemplateColumns: "1.5fr 1fr", gap: "18px" }}>
+          {/* Hero — Layer 1 & Layer 2 cards commented out */}
+          {/* <div style={{ display: "grid", gridTemplateColumns: "1.5fr 1fr", gap: "18px" }}>
             <div style={{ borderRadius: "24px", border: "0.8px solid #dce7e1", backgroundImage: "linear-gradient(155.79deg,rgba(45,169,109,0.07) 0%,rgba(255,255,255,0.96) 100%)", padding: "24px" }}>
               <LayerBadge>Layer 1 · Verification Lifecycle</LayerBadge>
               <h3 style={{ fontSize: "20.8px", fontWeight: 800, color: C.textPrimary, marginTop: "24px", marginBottom: 0 }}>Canoja Trust Engine</h3>
@@ -711,7 +711,7 @@ export default function AdminCanojaVerified() {
                 <Chip>{apiStats.expiringSoon ?? "—"} Expiring Soon</Chip>
               </div>
             </div>
-          </div>
+          </div> */}
 
           {/* Stat cards */}
           <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "18px" }}>
@@ -746,15 +746,15 @@ export default function AdminCanojaVerified() {
                   <select
                     value={regionDraft}
                     onChange={e => handleRegionChange(e.target.value)}
-                    style={{ width: "100%", height: "42px", padding: "0 12px", borderRadius: "12px", border: "0.8px solid #dce7e1", background: "#fff", fontSize: "14.72px", color: regionDraft ? C.textPrimary : "#8090a3", outline: "none", cursor: "pointer", boxSizing: "border-box" }}
+                    style={{ width: "100%", height: "42px", padding: "0 12px", borderRadius: "12px", border: "0.8px solid #dce7e1", background: "#fff", fontSize: "14.72px", color: C.textPrimary, outline: "none", cursor: "pointer", boxSizing: "border-box" }}
                   >
                     <option value="">All Markets</option>
-                    {stateOptions.map(s => <option key={s} value={s}>{s}</option>)}
+                    {stateOptions.map(s => <option key={s._id} value={s._id}>{s._id} ({s.count})</option>)}
                   </select>
                 </div>
 
-                {/* Source */}
-                <div>
+                {/* Source — commented out */}
+                {/* <div>
                   <label style={{ display: "block", fontSize: "13.76px", fontWeight: 800, color: C.textPrimary, marginBottom: "8px" }}>Verification Source</label>
                   <select
                     value={sourceDraft}
@@ -766,7 +766,7 @@ export default function AdminCanojaVerified() {
                     <option value="manual">Manual</option>
                     <option value="ai_verified">AI Verified</option>
                   </select>
-                </div>
+                </div> */}
 
                 {/* Renewal Status */}
                 <div>
@@ -808,6 +808,7 @@ export default function AdminCanojaVerified() {
                     columns={columns}
                     size="middle"
                     loading={isLoading}
+                    scroll={{ x: "max-content" }}
                     style={{ fontFamily: "Inter, sans-serif" }}
                     locale={{ emptyText: isLoading ? "Loading…" : "No verified operators found" }}
                     onRow={row => ({
@@ -827,7 +828,7 @@ export default function AdminCanojaVerified() {
               </div>
 
               {/* Audit & Badge Events */}
-              <div style={{ background: "#fff", border: "0.8px solid #dce7e1", borderRadius: "24px", boxShadow: "0px 1px 2px 0px rgba(16,24,40,0.06)", padding: "20px" }}>
+              {false && <div style={{ background: "#fff", border: "0.8px solid #dce7e1", borderRadius: "24px", boxShadow: "0px 1px 2px 0px rgba(16,24,40,0.06)", padding: "20px" }}>
                 <p style={{ fontSize: "16.32px", fontWeight: 800, color: C.textPrimary, margin: "0 0 16px" }}>Audit & Badge Events</p>
                 {(recentAuditData?.data?.length === 0 || !recentAuditData?.data) ? (
                   <p style={{ fontSize: "13px", color: C.textSecondary, margin: 0 }}>No recent events.</p>
@@ -849,7 +850,7 @@ export default function AdminCanojaVerified() {
                     ))}
                   </div>
                 )}
-              </div>
+              </div>}
             </div>
           </div>
         </div>

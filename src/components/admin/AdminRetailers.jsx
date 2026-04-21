@@ -239,7 +239,7 @@ function RetailerDrawer({ record, onClose }) {
             </div>
 
             {/* Verification lifecycle */}
-            {(lifecycle.length > 0 || auditLogs.length > 0) && (
+            {false && (lifecycle.length > 0 || auditLogs.length > 0) && (
               <div>
                 <p style={{ fontSize: "13px", fontWeight: 800, color: "#18212b", textTransform: "uppercase", letterSpacing: "1px", marginBottom: "12px" }}>Timeline</p>
                 <div style={{ display: "flex", flexDirection: "column", gap: "0" }}>
@@ -997,79 +997,11 @@ export default function AdminRetailers() {
         {/* ── Body ──────────────────────────────────────────────────────── */}
         <div style={{ padding: "24px", display: "flex", flexDirection: "column", gap: "24px" }}>
 
-          {/* ── Hero banner ─────────────────────────────────────────────── */}
+          {/* ── Hero banner — commented out
           <div style={{ display: "grid", gridTemplateColumns: "1.5fr 1fr", gap: "18px" }}>
-            {/* Left card */}
-            <div
-              style={{
-                borderRadius: "24px",
-                border: "0.8px solid #dce7e1",
-                boxShadow: "0px 1px 2px 0px rgba(16,24,40,0.06)",
-                backgroundImage: "linear-gradient(155.79deg, rgba(45,169,109,0.10) 0%, rgba(255,255,255,0.95) 100%)",
-                padding: "24px",
-                overflow: "clip",
-              }}
-            >
-              <LayerBadge>Layer 1 · Global Search + Data Health</LayerBadge>
-              <h3
-                style={{
-                  fontSize: "20.8px", fontWeight: 800, color: C.textPrimary,
-                  lineHeight: "30.16px", marginTop: "24px", marginBottom: "0",
-                }}
-              >
-                Operator Intelligence Search
-              </h3>
-              <p
-                style={{
-                  fontSize: "16px", fontWeight: 400, color: C.textSecondary,
-                  lineHeight: "23.2px", marginTop: "14px", maxWidth: "604px",
-                }}
-              >
-                One search bar across business name, DBA, license number, owner name, phone, email, and verification history. Built for speed, compliance review, and marketplace confidence.
-              </p>
-              <div style={{ display: "flex", flexWrap: "wrap", gap: "10px", marginTop: "24px" }}>
-                {["Fuzzy Search", "Geo-aware Queries", "Expiration Window Filters", "Data Completeness Score"].map(c => (
-                  <Chip key={c}>{c}</Chip>
-                ))}
-              </div>
-            </div>
-
-            {/* Right card */}
-            <div
-              style={{
-                borderRadius: "24px",
-                border: "0.8px solid #dce7e1",
-                boxShadow: "0px 1px 2px 0px rgba(16,24,40,0.06)",
-                background: "#fff",
-                padding: "24px",
-                overflow: "clip",
-              }}
-            >
-              <LayerBadge muted>Layer 2 · Quick Actions</LayerBadge>
-              <h3
-                style={{
-                  fontSize: "20.8px", fontWeight: 800, color: C.textPrimary,
-                  lineHeight: "30.16px", marginTop: "24px", marginBottom: "0",
-                }}
-              >
-                Recommended Actions
-              </h3>
-              <p
-                style={{
-                  fontSize: "16px", fontWeight: 400, color: C.textSecondary,
-                  lineHeight: "23.2px", marginTop: "14px",
-                }}
-              >
-                Surface operators missing owner information, expiring licenses, and mismatched records before they reach the mobile app.
-              </p>
-              <div style={{ display: "flex", flexWrap: "wrap", gap: "10px", marginTop: "24px" }}>
-                {[
-                  needReviewCount > 0 ? `${needReviewCount} Need Review` : "Need Review",
-                  expiringCount   > 0 ? `${expiringCount} Expire in 30 Days` : "Expire in 30 Days",
-                ].map(c => <Chip key={c}>{c}</Chip>)}
-              </div>
-            </div>
-          </div>
+            <div ...>Operator Intelligence Search</div>
+            <div ...>Recommended Actions</div>
+          </div> */}
 
           {/* ── Stat cards ──────────────────────────────────────────────── */}
           <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "18px" }}>
@@ -1194,7 +1126,7 @@ export default function AdminRetailers() {
                   </div>
                 </div>
 
-                {/* Source */}
+                {/* Source filter — not yet implemented
                 <div>
                   <label style={{ display: "block", fontSize: "13.76px", fontWeight: 800, color: C.textPrimary, marginBottom: "8px" }}>
                     Source
@@ -1213,7 +1145,7 @@ export default function AdminRetailers() {
                     <option value="manual">Manual Review</option>
                     <option value="state_db">State Database</option>
                   </select>
-                </div>
+                </div> */}
 
                 {/* Data Completeness */}
                 <div>
@@ -1290,9 +1222,9 @@ export default function AdminRetailers() {
                     </p>
                   </div>
                   <div style={{ display: "flex", gap: "10px", flexShrink: 0 }}>
-                    <button style={{ height: "42px", padding: "0 16px", borderRadius: "12px", background: "#fff", border: "0.8px solid #dce7e1", color: C.textPrimary, fontSize: "13.333px", fontWeight: 700, cursor: "pointer" }}>
+                    {/* <button style={{ height: "42px", padding: "0 16px", borderRadius: "12px", background: "#fff", border: "0.8px solid #dce7e1", color: C.textPrimary, fontSize: "13.333px", fontWeight: 700, cursor: "pointer" }}>
                       Bulk Assign
-                    </button>
+                    </button> */}
                     <button
                       onClick={handleExportCSV}
                       disabled={exporting}
@@ -1300,9 +1232,9 @@ export default function AdminRetailers() {
                     >
                       {exporting ? "Exporting…" : "Export CSV"}
                     </button>
-                    <button style={{ height: "42px", padding: "0 16px", borderRadius: "12px", backgroundImage: "linear-gradient(165.51deg, #1b6b46 0%, #2da96d 100%)", border: "0.8px solid rgba(0,0,0,0)", color: "#fff", fontSize: "13.333px", fontWeight: 700, cursor: "pointer" }}>
+                    {/* <button style={{ height: "42px", padding: "0 16px", borderRadius: "12px", backgroundImage: "linear-gradient(165.51deg, #1b6b46 0%, #2da96d 100%)", border: "0.8px solid rgba(0,0,0,0)", color: "#fff", fontSize: "13.333px", fontWeight: 700, cursor: "pointer" }}>
                       Sync to Marketplace
-                    </button>
+                    </button> */}
                   </div>
                 </div>
 
@@ -1334,6 +1266,7 @@ export default function AdminRetailers() {
                     columns={columns}
                     size="middle"
                     loading={isLoading}
+                    scroll={{ x: "max-content" }}
                     style={{ fontFamily: "Inter, sans-serif" }}
                     className="retailers-table"
                     locale={{ emptyText: isLoading ? "Loading..." : "No retailers found" }}
@@ -1354,7 +1287,7 @@ export default function AdminRetailers() {
               </div>
 
               {/* ── Split panel: Timeline + Audit Logs ────────────────── */}
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 340px", gap: "18px" }}>
+              {false && <div style={{ display: "grid", gridTemplateColumns: "1fr 340px", gap: "18px" }}>
 
                 {/* Verification Timeline */}
                 <div
@@ -1435,7 +1368,7 @@ export default function AdminRetailers() {
                   </div>
                 </div>
 
-              </div>
+              </div>}
             </div>
           </div>
         </div>

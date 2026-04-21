@@ -11,6 +11,8 @@ import {
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "react-toastify";
 
+const US_STATES = ["AL","AK","AZ","AR","CA","CO","CT","DE","FL","GA","HI","ID","IL","IN","IA","KS","KY","LA","ME","MD","MA","MI","MN","MS","MO","MT","NE","NV","NH","NJ","NM","NY","NC","ND","OH","OK","OR","PA","RI","SC","SD","TN","TX","UT","VT","VA","WA","WV","WI","WY","DC"];
+
 // ── Design tokens ─────────────────────────────────────────────────────────────
 const C = {
   border: "#dce7e1",
@@ -476,7 +478,7 @@ export default function AdminPendingVerifications() {
   const records     = rawRecords.map(mapVerification);
   const pagination  = apiData?.pagination || {};
   const apiStats    = apiData?.stats || {};
-  const jurisdictions = apiData?.facets?.jurisdictions || [];
+  const stateOptions  = apiData?.facets?.states || [];
 
   const STATS = [
     { label: "Pending Total",      value: (apiStats.pendingTotal ?? "—").toString(), delta: "Backlog",               deltaBg: "#fff5eb", deltaColor: "#d9822b" },
@@ -741,43 +743,23 @@ export default function AdminPendingVerifications() {
                   }}
                 />
               </div>
-              <button style={{ height: "42px", padding: "0 16px", borderRadius: "12px", background: "#fff", border: "0.8px solid #dce7e1", color: C.textPrimary, fontSize: "13.333px", fontWeight: 700, cursor: "pointer" }}>
+              {/* <button style={{ height: "42px", padding: "0 16px", borderRadius: "12px", background: "#fff", border: "0.8px solid #dce7e1", color: C.textPrimary, fontSize: "13.333px", fontWeight: 700, cursor: "pointer" }}>
                 Auto-Route
               </button>
               <button style={{ height: "42px", padding: "0 16px", borderRadius: "12px", backgroundImage: "linear-gradient(161deg,#1b6b46 0%,#2da96d 100%)", border: "none", color: "#fff", fontSize: "13.333px", fontWeight: 700, cursor: "pointer" }}>
                 Assign Queue
-              </button>
+              </button> */}
           </div>
         </div>
 
         {/* Body */}
         <div style={{ padding: "24px", display: "flex", flexDirection: "column", gap: "24px" }}>
 
-          {/* Hero banner */}
+          {/* Hero banner — commented out
           <div style={{ display: "grid", gridTemplateColumns: "1.5fr 1fr", gap: "18px" }}>
-            <div style={{ borderRadius: "24px", border: "0.8px solid #dce7e1", backgroundImage: "linear-gradient(155.79deg,rgba(251,146,60,0.13) 0%,rgba(255,255,255,0.95) 100%)", padding: "24px" }}>
-              <LayerBadge>Layer 1 · SLA + Prioritization</LayerBadge>
-              <h3 style={{ fontSize: "20.8px", fontWeight: 800, color: C.textPrimary, marginTop: "24px", marginBottom: 0 }}>Verification Queue Command Center</h3>
-              <p style={{ fontSize: "16px", color: C.textSecondary, marginTop: "14px", maxWidth: "604px" }}>
-                Sort by submission age, launch market, missing documents, AI confidence, or SLA breach so high-priority records are resolved first.
-              </p>
-              <div style={{ display: "flex", flexWrap: "wrap", gap: "10px", marginTop: "24px" }}>
-                {["High Priority Launch States", "SLA Breach Flags", "Assigned Reviewer"].map(c => <Chip key={c}>{c}</Chip>)}
-              </div>
-            </div>
-            <div style={{ borderRadius: "24px", border: "0.8px solid #dce7e1", background: "#fff", padding: "24px" }}>
-              <LayerBadge muted>Layer 2 · Queue Status</LayerBadge>
-              <h3 style={{ fontSize: "20.8px", fontWeight: 800, color: C.textPrimary, marginTop: "24px", marginBottom: 0 }}>Backlog Health</h3>
-              <p style={{ fontSize: "16px", color: C.textSecondary, marginTop: "14px" }}>
-                Keep reviewers focused on records that impact launch readiness and verified badge coverage.
-              </p>
-              <div style={{ display: "flex", flexWrap: "wrap", gap: "10px", marginTop: "24px" }}>
-                <Chip>{apiStats.lt24Count ?? "—"} New</Chip>
-                <Chip>{apiStats.slaBreaches ?? "—"} Over 72h</Chip>
-                <Chip>{apiStats.missingDocsCount ?? "—"} Missing Docs</Chip>
-              </div>
-            </div>
-          </div>
+            <div ...>Layer 1 · Verification Queue Command Center</div>
+            <div ...>Layer 2 · Backlog Health</div>
+          </div> */}
 
           {/* Stat cards */}
           <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "18px" }}>
@@ -834,14 +816,14 @@ export default function AdminPendingVerifications() {
                     style={{ width: "100%", height: "42px", padding: "0 12px", borderRadius: "12px", border: `0.8px solid ${regionDraft ? "#2da96d" : "#dce7e1"}`, background: regionDraft ? "#edf9f2" : "#fff", fontSize: "14.72px", color: C.textPrimary, outline: "none", cursor: "pointer" }}
                   >
                     <option value="">All Markets</option>
-                    {jurisdictions.map(j => (
-                      <option key={j} value={j}>{j}</option>
+                    {stateOptions.map(s => (
+                      <option key={s._id} value={s._id}>{s._id} ({s.count})</option>
                     ))}
                   </select>
                 </div>
 
-                {/* Submission Type */}
-                <div>
+                {/* Submission Type — commented out (all pending are manual) */}
+                {/* <div>
                   <label style={{ display: "block", fontSize: "13.76px", fontWeight: 800, color: C.textPrimary, marginBottom: "8px" }}>Submission Type</label>
                   <select
                     style={{ width: "100%", height: "42px", padding: "0 12px", borderRadius: "12px", border: "0.8px solid #dce7e1", background: "#fff", fontSize: "14.72px", color: C.textPrimary, outline: "none", cursor: "pointer" }}
@@ -851,10 +833,10 @@ export default function AdminPendingVerifications() {
                     <option value="manual">Manual</option>
                     <option value="auto">Auto</option>
                   </select>
-                </div>
+                </div> */}
 
-                {/* Reviewer */}
-                <div>
+                {/* Reviewer — commented out */}
+                {/* <div>
                   <label style={{ display: "block", fontSize: "13.76px", fontWeight: 800, color: C.textPrimary, marginBottom: "8px" }}>Reviewer</label>
                   <select
                     style={{ width: "100%", height: "42px", padding: "0 12px", borderRadius: "12px", border: "0.8px solid #dce7e1", background: "#fff", fontSize: "14.72px", color: C.textPrimary, outline: "none", cursor: "pointer" }}
@@ -862,7 +844,7 @@ export default function AdminPendingVerifications() {
                   >
                     <option value="">Any Reviewer</option>
                   </select>
-                </div>
+                </div> */}
               </div>
             </div>
 
@@ -916,6 +898,7 @@ export default function AdminPendingVerifications() {
                     columns={columns}
                     size="middle"
                     loading={isLoading}
+                    scroll={{ x: "max-content" }}
                     style={{ fontFamily: "Inter, sans-serif" }}
                     locale={{ emptyText: isLoading ? "Loading…" : "No pending verifications" }}
                     rowSelection={{
