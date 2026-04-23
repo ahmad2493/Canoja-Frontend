@@ -328,6 +328,7 @@ export default function AdminVerifiedPharmacies() {
   const [distance, setDistance]         = useState(null);
   const [minRating, setMinRating]       = useState("");
   const [licenseStatus, setLicenseStatus] = useState("");
+  const [operator, setOperator]         = useState(""); // "claimed" | "unclaimed"
   const [page, setPage]                 = useState(1);
   const [drawerRecord, setDrawerRecord] = useState(null);
   const [userCoords, setUserCoords]     = useState(null);
@@ -338,7 +339,7 @@ export default function AdminVerifiedPharmacies() {
     return () => clearTimeout(t);
   }, [search]);
 
-  useEffect(() => { setPage(1); }, [market, availability, serviceType, distance, minRating, licenseStatus]);
+  useEffect(() => { setPage(1); }, [market, availability, serviceType, distance, minRating, licenseStatus, operator]);
 
   // Request geolocation when user picks a distance
   useEffect(() => {
@@ -380,6 +381,7 @@ export default function AdminVerifiedPharmacies() {
   if (minRating)       mainParams.minRating = minRating;
   if (serviceType)     mainParams.serviceType = serviceType;
   if (licenseStatus)   mainParams.licenseStatus = licenseStatus;
+  if (operator)        mainParams.claimed = operator;
 
   const { data: adminData,   isLoading: adminLoading   } = useAdminCanojaVerified(mainParams);
   const { data: compareData, isLoading: compareLoading } = useCompareShops(compareBody, { enabled: useCompareShopsMode });
@@ -409,10 +411,12 @@ export default function AdminVerifiedPharmacies() {
   const openNowCount  = openNowCountData?.data?.pagination?.total_results ?? 0;
   const deliveryCount = facetStats.deliveryReady ?? 0;
   const avgRating     = facetStats.avgRating != null ? facetStats.avgRating : "—";
+  const claimedCount   = facetStats.claimed   ?? 0;
+  const unclaimedCount = facetStats.unclaimed ?? 0;
 
   const handleReset = () => {
     setSearch(""); setDebouncedSearch(""); setMarket(""); setAvailability("");
-    setServiceType(""); setDistance(null); setMinRating(""); setLicenseStatus(""); setPage(1);
+    setServiceType(""); setDistance(null); setMinRating(""); setLicenseStatus(""); setOperator(""); setPage(1);
     setGeoError(false);
   };
 
@@ -434,7 +438,7 @@ export default function AdminVerifiedPharmacies() {
         }}>
           <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
             <h1 style={{ fontSize: "28.8px", fontWeight: 800, color: C.textPrimary, letterSpacing: "-0.576px", lineHeight: "41.76px", margin: 0 }}>
-              Verified Pharmacies
+              Verified Businesses
             </h1>
             <p style={{ fontSize: "15.36px", fontWeight: 400, color: C.textSecondary, lineHeight: "22.272px", maxWidth: "620px", margin: 0 }}>
               Public-facing marketplace directory with verified-first trust signals and consumer-ready filtering.
@@ -623,6 +627,32 @@ export default function AdminVerifiedPharmacies() {
                     <option value="Active">Active</option>
                     <option value="Expired">Expired</option>
                   </select>
+                </div>
+
+                {/* Operator */}
+                <div>
+                  <label style={{ display: "block", fontSize: "13.76px", fontWeight: 800, color: C.textPrimary, marginBottom: "8px" }}>Operator</label>
+                  <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                    {[
+                      { label: "Claimed",   value: "claimed",   count: claimedCount },
+                      { label: "Unclaimed", value: "unclaimed", count: unclaimedCount },
+                    ].map(({ label, value, count }) => (
+                      <div
+                        key={value}
+                        onClick={() => setOperator(operator === value ? "" : value)}
+                        style={{
+                          display: "flex", alignItems: "center", justifyContent: "space-between",
+                          padding: "10.8px 12.8px", borderRadius: "12px",
+                          border: `0.8px solid ${operator === value ? "#2da96d" : "#dce7e1"}`,
+                          background: operator === value ? "#edf9f2" : "#fcfefd",
+                          cursor: "pointer",
+                        }}
+                      >
+                        <span style={{ fontSize: "14.72px", fontWeight: 400, color: C.textPrimary }}>{label}</span>
+                        <span style={{ fontSize: "13.12px", fontWeight: 700, color: C.textSecondary }}>{count}</span>
+                      </div>
+                    ))}
+                  </div>
                 </div>
 
               </div>

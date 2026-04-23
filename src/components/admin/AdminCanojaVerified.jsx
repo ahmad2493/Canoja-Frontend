@@ -663,7 +663,7 @@ export default function AdminCanojaVerified() {
           <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
             <h1 style={{ fontSize: "28.8px", fontWeight: 800, color: C.textPrimary, letterSpacing: "-0.576px", margin: 0 }}>Canoja Verified</h1>
             <p style={{ fontSize: "15.36px", color: C.textSecondary, maxWidth: "620px", margin: 0 }}>
-              Trust layer for active verified operators — badge lifecycle, renewal status, and compliance signals.
+              Trust layer for active verified businesses — badge lifecycle, renewal status, and compliance signals.
             </p>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: "10px", flexShrink: 0 }}>
@@ -792,8 +792,8 @@ export default function AdminCanojaVerified() {
               <div style={{ background: "#fff", border: "0.8px solid #dce7e1", borderRadius: "24px", boxShadow: "0px 1px 2px 0px rgba(16,24,40,0.06)", overflow: "clip", padding: "0.8px" }}>
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "20px", borderBottom: "0.8px solid #dce7e1" }}>
                   <div>
-                    <p style={{ fontSize: "16.32px", fontWeight: 800, color: C.textPrimary, margin: 0 }}>Verified Operators</p>
-                    <p style={{ fontSize: "14.4px", color: C.textSecondary, margin: "4px 0 0" }}>Operators with active Canoja verification. Click any row for full details.</p>
+                    <p style={{ fontSize: "16.32px", fontWeight: 800, color: C.textPrimary, margin: 0 }}>Verified Businesses</p>
+                    <p style={{ fontSize: "14.4px", color: C.textSecondary, margin: "4px 0 0" }}>Businesses with active Canoja verification. Click any row for full details.</p>
                   </div>
                   <div style={{ display: "flex", gap: "10px" }}>
                     <button onClick={handleExport} style={{ height: "42px", padding: "0 16px", borderRadius: "12px", background: "#fff", border: "0.8px solid #dce7e1", color: C.textPrimary, fontSize: "13.333px", fontWeight: 700, cursor: "pointer" }}>Export Badge Log</button>

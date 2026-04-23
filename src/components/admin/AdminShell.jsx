@@ -20,7 +20,7 @@ const NAV_MANAGEMENT = [
 ];
 
 const NAV_PUBLIC = [
-  { label: "Verified Pharmacies", path: "/admin/verified-pharmacies" },
+  { label: "Verified Businesses", path: "/admin/verified-pharmacies" },
 ];
 
 
@@ -133,7 +133,7 @@ export default function AdminShell({ children }) {
                 whiteSpace: "nowrap",
               }}
             >
-              Canoja Verify
+              Canoja
             </p>
             <p
               style={{

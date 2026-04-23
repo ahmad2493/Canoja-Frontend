@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Table, ConfigProvider, Drawer } from "antd";
+import { Table, ConfigProvider, Drawer, Modal } from "antd";
 import AdminShell from "./AdminShell";
 import {
   useAdminPendingRequests,
@@ -128,25 +128,31 @@ function mapRequest(r) {
 function RejectModal({ requestId, businessName, onClose, onConfirm, loading }) {
   const [reason, setReason] = useState("");
   return (
-    <div style={{ position: "fixed", inset: 0, zIndex: 1000, background: "rgba(0,0,0,0.4)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-      <div style={{ background: "#fff", borderRadius: "20px", padding: "28px", width: "440px", boxShadow: "0px 24px 48px rgba(0,0,0,0.16)" }}>
-        <h3 style={{ fontSize: "18px", fontWeight: 800, color: C.textPrimary, margin: "0 0 6px" }}>Reject Request</h3>
-        <p style={{ fontSize: "14px", color: C.textSecondary, margin: "0 0 20px" }}>{businessName}</p>
-        <textarea
-          value={reason}
-          onChange={e => setReason(e.target.value)}
-          placeholder="Reason for rejection (optional)"
-          rows={4}
-          style={{ width: "100%", padding: "12px", borderRadius: "12px", border: "0.8px solid #dce7e1", fontSize: "14px", fontFamily: "inherit", resize: "vertical", outline: "none", boxSizing: "border-box" }}
-        />
-        <div style={{ display: "flex", gap: "10px", marginTop: "20px", justifyContent: "flex-end" }}>
-          <button onClick={onClose} style={{ height: "40px", padding: "0 20px", borderRadius: "10px", background: "#fff", border: "0.8px solid #dce7e1", color: C.textPrimary, fontSize: "13px", fontWeight: 700, cursor: "pointer" }}>Cancel</button>
-          <button onClick={() => onConfirm(requestId, reason)} disabled={loading} style={{ height: "40px", padding: "0 20px", borderRadius: "10px", background: "#d64545", border: "none", color: "#fff", fontSize: "13px", fontWeight: 700, cursor: "pointer", opacity: loading ? 0.6 : 1 }}>
-            {loading ? "Rejecting…" : "Confirm Reject"}
-          </button>
-        </div>
+    <Modal
+      open
+      onCancel={onClose}
+      zIndex={2000}
+      footer={null}
+      width={440}
+      styles={{ content: { borderRadius: "20px", padding: "28px" } }}
+    >
+      <h3 style={{ fontSize: "18px", fontWeight: 800, color: C.textPrimary, margin: "0 0 6px" }}>Reject Request</h3>
+      <p style={{ fontSize: "14px", color: C.textSecondary, margin: "0 0 20px" }}>{businessName}</p>
+      <textarea
+        autoFocus
+        value={reason}
+        onChange={e => setReason(e.target.value)}
+        placeholder="Reason for rejection (optional)"
+        rows={4}
+        style={{ width: "100%", padding: "12px", borderRadius: "12px", border: "0.8px solid #dce7e1", fontSize: "14px", fontFamily: "inherit", resize: "vertical", outline: "none", boxSizing: "border-box", color: "#18212b", background: "#fff" }}
+      />
+      <div style={{ display: "flex", gap: "10px", marginTop: "20px", justifyContent: "flex-end" }}>
+        <button onClick={onClose} style={{ height: "40px", padding: "0 20px", borderRadius: "10px", background: "#fff", border: "0.8px solid #dce7e1", color: C.textPrimary, fontSize: "13px", fontWeight: 700, cursor: "pointer" }}>Cancel</button>
+        <button onClick={() => onConfirm(requestId, reason)} disabled={loading} style={{ height: "40px", padding: "0 20px", borderRadius: "10px", background: "#d64545", border: "none", color: "#fff", fontSize: "13px", fontWeight: 700, cursor: "pointer", opacity: loading ? 0.6 : 1 }}>
+          {loading ? "Rejecting…" : "Confirm Reject"}
+        </button>
       </div>
-    </div>
+    </Modal>
   );
 }
 
@@ -614,6 +620,8 @@ export default function AdminPendingRequests() {
   const allMapped    = rawRecords.map(mapRequest);
   const stateOptions = apiData?.facets?.states || [];
   const records = allMapped;
+  const selectedRecords = selectedRowKeys.map(k => rawRecords.find(r => r._id === k)).filter(Boolean);
+  const canApproveSelection = selectedRecords.length > 0 && selectedRecords.every(r => r.status === "pending" || r.status === "in_review");
   const pagination = apiData?.pagination || {};
   const apiStats   = apiData?.stats || {};
 
@@ -656,6 +664,11 @@ export default function AdminPendingRequests() {
   };
 
   const handleApprove = async (requestId) => {
+    const record = rawRecords.find(r => r._id === requestId);
+    if (record && record.status !== "pending" && record.status !== "in_review") {
+      toast.warning("Only pending or in-review requests can be approved.");
+      return;
+    }
     setApprovingId(requestId);
     try {
       await approve(requestId);
@@ -886,9 +899,10 @@ export default function AdminPendingRequests() {
                       Message Operator
                     </button> */}
                     <button
-                      onClick={() => selectedRowKeys.length && handleApprove(selectedRowKeys[0])}
-                      disabled={!selectedRowKeys.length}
-                      style={{ height: "42px", padding: "0 16px", borderRadius: "12px", background: selectedRowKeys.length ? "linear-gradient(170deg,#1b6b46,#2da96d)" : "#fff", border: selectedRowKeys.length ? "none" : "0.8px solid #dce7e1", color: selectedRowKeys.length ? "#fff" : C.textSecondary, fontSize: "13.333px", fontWeight: 700, cursor: selectedRowKeys.length ? "pointer" : "default" }}
+                      onClick={() => canApproveSelection && handleApprove(selectedRowKeys[0])}
+                      disabled={!canApproveSelection}
+                      title={!canApproveSelection && selectedRowKeys.length ? "Only pending or in-review requests can be approved" : ""}
+                      style={{ height: "42px", padding: "0 16px", borderRadius: "12px", background: canApproveSelection ? "linear-gradient(170deg,#1b6b46,#2da96d)" : "#fff", border: canApproveSelection ? "none" : "0.8px solid #dce7e1", color: canApproveSelection ? "#fff" : C.textSecondary, fontSize: "13.333px", fontWeight: 700, cursor: canApproveSelection ? "pointer" : "default" }}
                     >
                       Approve
                     </button>

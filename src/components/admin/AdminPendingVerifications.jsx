@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { Table, ConfigProvider, Drawer } from "antd";
+import { Table, ConfigProvider, Drawer, Modal } from "antd";
 import AdminShell from "./AdminShell";
 import {
   useAdminPendingVerifications,
@@ -103,53 +103,54 @@ function EvidenceBadge({ text }) {
 function RejectModal({ requestId, businessName, onClose, onConfirm, loading }) {
   const [reason, setReason] = useState("");
   return (
-    <div style={{
-      position: "fixed", inset: 0, zIndex: 1000,
-      background: "rgba(0,0,0,0.4)", display: "flex", alignItems: "center", justifyContent: "center",
-    }}>
-      <div style={{
-        background: "#fff", borderRadius: "20px", padding: "28px", width: "440px",
-        boxShadow: "0px 24px 48px rgba(0,0,0,0.16)",
-      }}>
-        <h3 style={{ fontSize: "18px", fontWeight: 800, color: C.textPrimary, margin: "0 0 6px" }}>Reject Verification</h3>
-        <p style={{ fontSize: "14px", color: C.textSecondary, margin: "0 0 20px" }}>{businessName}</p>
-        <textarea
-          value={reason}
-          onChange={e => setReason(e.target.value)}
-          placeholder="Reason for rejection (optional)"
-          rows={4}
+    <Modal
+      open
+      onCancel={onClose}
+      zIndex={2000}
+      footer={null}
+      width={440}
+      styles={{ content: { borderRadius: "20px", padding: "28px" } }}
+    >
+      <h3 style={{ fontSize: "18px", fontWeight: 800, color: C.textPrimary, margin: "0 0 6px" }}>Reject Verification</h3>
+      <p style={{ fontSize: "14px", color: C.textSecondary, margin: "0 0 20px" }}>{businessName}</p>
+      <textarea
+        autoFocus
+        value={reason}
+        onChange={e => setReason(e.target.value)}
+        placeholder="Reason for rejection (optional)"
+        rows={4}
+        style={{
+          width: "100%", padding: "12px", borderRadius: "12px",
+          border: "0.8px solid #dce7e1", fontSize: "14px", fontFamily: "inherit",
+          resize: "vertical", outline: "none", boxSizing: "border-box",
+          color: "#18212b", background: "#fff",
+        }}
+      />
+      <div style={{ display: "flex", gap: "10px", marginTop: "20px", justifyContent: "flex-end" }}>
+        <button
+          onClick={onClose}
           style={{
-            width: "100%", padding: "12px", borderRadius: "12px",
-            border: "0.8px solid #dce7e1", fontSize: "14px", fontFamily: "inherit",
-            resize: "vertical", outline: "none", boxSizing: "border-box",
+            height: "40px", padding: "0 20px", borderRadius: "10px",
+            background: "#fff", border: "0.8px solid #dce7e1",
+            color: C.textPrimary, fontSize: "13px", fontWeight: 700, cursor: "pointer",
           }}
-        />
-        <div style={{ display: "flex", gap: "10px", marginTop: "20px", justifyContent: "flex-end" }}>
-          <button
-            onClick={onClose}
-            style={{
-              height: "40px", padding: "0 20px", borderRadius: "10px",
-              background: "#fff", border: "0.8px solid #dce7e1",
-              color: C.textPrimary, fontSize: "13px", fontWeight: 700, cursor: "pointer",
-            }}
-          >
-            Cancel
-          </button>
-          <button
-            onClick={() => onConfirm(requestId, reason)}
-            disabled={loading}
-            style={{
-              height: "40px", padding: "0 20px", borderRadius: "10px",
-              background: "#d64545", border: "none",
-              color: "#fff", fontSize: "13px", fontWeight: 700, cursor: "pointer",
-              opacity: loading ? 0.6 : 1,
-            }}
-          >
-            {loading ? "Rejecting…" : "Confirm Reject"}
-          </button>
-        </div>
+        >
+          Cancel
+        </button>
+        <button
+          onClick={() => onConfirm(requestId, reason)}
+          disabled={loading}
+          style={{
+            height: "40px", padding: "0 20px", borderRadius: "10px",
+            background: "#d64545", border: "none",
+            color: "#fff", fontSize: "13px", fontWeight: 700, cursor: "pointer",
+            opacity: loading ? 0.6 : 1,
+          }}
+        >
+          {loading ? "Rejecting…" : "Confirm Reject"}
+        </button>
       </div>
-    </div>
+    </Modal>
   );
 }
 
@@ -157,7 +158,7 @@ function RejectModal({ requestId, businessName, onClose, onConfirm, loading }) {
 function EscalateModal({ request, onClose, onConfirm, loading }) {
   const [note, setNote] = useState("");
   return (
-    <div style={{ position: "fixed", inset: 0, zIndex: 1000, background: "rgba(0,0,0,0.4)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+    <div style={{ position: "fixed", inset: 0, zIndex: 2000, background: "rgba(0,0,0,0.4)", display: "flex", alignItems: "center", justifyContent: "center" }}>
       <div style={{ background: "#fff", borderRadius: "20px", padding: "28px", width: "440px", boxShadow: "0px 24px 48px rgba(0,0,0,0.16)" }}>
         <h3 style={{ fontSize: "18px", fontWeight: 800, color: C.textPrimary, margin: "0 0 6px" }}>Escalate to High Priority</h3>
         <p style={{ fontSize: "14px", color: C.textSecondary, margin: "0 0 20px" }}>{request.legal_business_name}</p>
